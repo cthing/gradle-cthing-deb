@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -269,7 +270,7 @@ public class DebTask extends DefaultTask {
      * @param name  Name of the variable to add to the control file.
      * @param value  The variable to add.
      */
-    public void additionalMacro(final String name, final Object value) {
+    public void additionalVariable(final String name, final Object value) {
         this.additionalVariables.put(name, value);
     }
 
@@ -294,7 +295,7 @@ public class DebTask extends DefaultTask {
     }
 
     /**
-     * Adds the specified Linitian suppression tag.
+     * Adds the specified Lintian suppression tag.
      *
      * @param tag Lintian suppression tag.
      */
@@ -318,15 +319,28 @@ public class DebTask extends DefaultTask {
         FileUtils.makeDirs(debianDir);
 
         // Copy the conffiles file into place.
-        copyToDebianDir(debianDir, this.conffilesFile, "conffiles");
+        copyToDebianDir(debianDir, this.conffilesFile, "conffiles", "rw-r--r--");
 
         // Copy installation scripts
-        copyToDebianDir(debianDir, this.preinstFile, "preinst");
-        copyToDebianDir(debianDir, this.postinstFile, "postinst");
-        copyToDebianDir(debianDir, this.prermFile, "prerm");
-        copyToDebianDir(debianDir, this.postrmFile, "postrm");
+        copyToDebianDir(debianDir, this.preinstFile, "preinst", "rwxr-xr-x");
+        copyToDebianDir(debianDir, this.postinstFile, "postinst", "rwxr-xr-x");
+        copyToDebianDir(debianDir, this.prermFile, "prerm", "rwxr-xr-x");
+        copyToDebianDir(debianDir, this.postrmFile, "postrm", "rwxr-xr-x");
 
         // Process the control file into place.
+        final Path dstControlFile = copyControlFile(debianDir);
+
+        // Configure the copy specification and copy the files into the package.
+        copyContents(wdir);
+
+        // Build the package.
+        buildPackage(wdir, dstControlFile);
+
+        // Lint the built package.
+        lintPackage(dstControlFile);
+    }
+
+    private Path copyControlFile(final File debianDir) {
         final File srcControlFile = this.controlFile.get();
         final Path dstControlFile = debianDir.toPath().resolve("control");
         try (Writer writer = new OutputStreamWriter(Files.newOutputStream(dstControlFile),
@@ -337,16 +351,10 @@ public class DebTask extends DefaultTask {
         } catch (final IOException | TemplateException ex) {
             throw new TaskExecutionException(this, ex);
         }
+        return dstControlFile;
+    }
 
-        // Parse the control file for forming the built package name.
-        final ControlFile parsedControlFile;
-        try (InputStream ins = Files.newInputStream(dstControlFile)) {
-            parsedControlFile = ControlFile.parse(ins);
-        } catch (final IOException ex) {
-            throw new TaskExecutionException(this, ex);
-        }
-
-        // Configure the copy specification and copy the files into the package.
+    private void copyContents(final File wdir) {
         final CopySpec cspec = this.copySpec.getOrNull();
         if (cspec == null) {
             throw new GradleException("copySpec property must not be null");
@@ -356,8 +364,9 @@ public class DebTask extends DefaultTask {
             cs.into(wdir);
             cs.with(cspec);
         });
+    }
 
-        // Build the package.
+    private void buildPackage(final File wdir, final Path ctrlFile) {
         final List<String> dpkgDebArgs = new ArrayList<>();
         dpkgDebArgs.add(DPKG_DEB_TOOL);
         dpkgDebArgs.add("--build");
@@ -365,14 +374,22 @@ public class DebTask extends DefaultTask {
         dpkgDebArgs.add(wdir.getPath());
         dpkgDebArgs.add(this.destinationDir.get().getPath());
 
-        LOGGER.info(String.format("Running %s on control file %s", DPKG_DEB_TOOL, dstControlFile));
+        LOGGER.info(String.format("Running %s on control file %s", DPKG_DEB_TOOL, ctrlFile));
         getProject().exec(es -> {
             es.commandLine(dpkgDebArgs);
             es.setErrorOutput(System.out);
         });
+    }
 
-        // Lint the built package.
-        final String packageName = parsedControlFile.toString() + ".deb";
+    private void lintPackage(final Path ctrlFile) {
+        final ControlFile parsedControlFile;
+        try (InputStream ins = Files.newInputStream(ctrlFile)) {
+            parsedControlFile = ControlFile.parse(ins);
+        } catch (final IOException ex) {
+            throw new TaskExecutionException(this, ex);
+        }
+
+        final String packageName = parsedControlFile + ".deb";
         final File packageFile = new File(this.destinationDir.get(), packageName);
         final List<String> lintianArgs = new ArrayList<>();
         lintianArgs.add(LINTIAN_TOOL);
@@ -382,17 +399,26 @@ public class DebTask extends DefaultTask {
         });
         lintianArgs.add(packageFile.getPath());
 
-        LOGGER.info(String.format("Running %s on control file %s", LINTIAN_TOOL, packageFile));
+        LOGGER.info(String.format("Running %s on package file %s", LINTIAN_TOOL, packageFile));
         getProject().exec(es -> {
             es.commandLine(lintianArgs);
             es.setErrorOutput(System.out);
         });
     }
 
-    private void copyToDebianDir(final File debianDir, final Property<File> property, final String filename) {
+    private void copyToDebianDir(final File debianDir, final Property<File> property, final String filename,
+                                 final String perms) {
         final File file = property.getOrNull();
         if (file != null) {
-            FileUtils.copyFile(file, new File(debianDir, filename), true);
+            final File destFile = new File(debianDir, filename);
+            FileUtils.copyFile(file, destFile, true);
+            if (perms != null) {
+                try {
+                    Files.setPosixFilePermissions(destFile.toPath(), PosixFilePermissions.fromString(perms));
+                } catch (final IOException ex) {
+                    throw new TaskExecutionException(this, ex);
+                }
+            }
         }
     }
 

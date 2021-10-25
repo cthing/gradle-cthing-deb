@@ -51,40 +51,40 @@ public class DebPluginTest {
         assertThat(task.getDestinationDir().get()).isEqualTo(new File(this.project.getBuildDir(), "distributions"));
         assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.project.getBuildDir(), "debbuild/generateDeb"));
         assertThat(task.getAdditionalVariables().get()).isEmpty();
+        assertThat(task.getCopySpec().get()).isNotNull();
     }
 
     @Test
     public void testVariables() {
         final SemanticVersion version = (SemanticVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, Object> macros = task.createControlVariables();
-        assertThat(macros).isNotNull();
-        assertThat(macros).containsEntry("project_group", this.project.getGroup());
-        assertThat(macros).containsEntry("project_name", this.project.getName());
-        assertThat(macros).containsEntry("project_version", version.toString());
-        assertThat(macros).containsEntry("project_semantic_version", version.getSemanticVersion());
-        assertThat(macros).containsEntry("project_build_number", version.getBuildNumber());
-        assertThat((String)macros.get("project_build_date")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
-        assertThat(macros.get("project_branch")).isNotNull();
-        assertThat(macros.get("project_commit")).isNotNull();
-        assertThat(macros).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
-        assertThat(macros).containsEntry("project_build_dir", this.project.getBuildDir().getAbsolutePath());
-        assertThat(macros).containsEntry("project_organization", "C Thing Software");
-        assertThat(macros).containsEntry("project_main_resources_dir", new File(this.project.getBuildDir(),
+        final Map<String, Object> variables = task.createControlVariables();
+        assertThat(variables).isNotNull();
+        assertThat(variables).containsEntry("project_group", this.project.getGroup());
+        assertThat(variables).containsEntry("project_name", this.project.getName());
+        assertThat(variables).containsEntry("project_version", version.toString());
+        assertThat(variables).containsEntry("project_semantic_version", version.getSemanticVersion());
+        assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
+        assertThat((String)variables.get("project_build_date")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
+        assertThat(variables.get("project_branch")).isNotNull();
+        assertThat(variables.get("project_commit")).isNotNull();
+        assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
+        assertThat(variables).containsEntry("project_build_dir", this.project.getBuildDir().getAbsolutePath());
+        assertThat(variables).containsEntry("project_organization", "C Thing Software");
+        assertThat(variables).containsEntry("project_main_resources_dir", new File(this.project.getBuildDir(),
                                                                                 "resources/main").getAbsolutePath());
     }
 
     @Test
-    public void testVariablesAdditionalMacros() {
+    public void testAdditionalVariables() {
         final DebExtension extension = GradleInterop.getExtension(this.project, DebExtension.class);
         extension.additionalVariable("em1", "ev1");
         extension.additionalVariable("m1", "v0");
 
         final Supplier<String> proc = () -> "hello";
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        task.additionalMacro("m1", "v1");
-        task.additionalMacro("m2", "v2");
-        task.additionalMacro("m3", proc);
+        task.additionalVariable("m1", "v1");
+        task.additionalVariables(Map.of("m2", "v2", "m3", proc));
 
         final Map<String, Object> variables = task.createControlVariables();
         assertThat(variables).containsEntry("em1", "ev1");
@@ -94,7 +94,7 @@ public class DebPluginTest {
     }
 
     @Test
-    public void testLintianTags() {
+    public void testDefaultLintianTags() {
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Set<String> tags = task.createLintianTags();
         assertThat(tags).containsExactlyInAnyOrder("changelog-file-missing-in-native-package",
@@ -105,13 +105,24 @@ public class DebPluginTest {
     }
 
     @Test
-    public void testLintianTagsAdditionalTags() {
+    public void testExtensionLintianTagsAdditionalTags() {
         final DebExtension extension = GradleInterop.getExtension(this.project, DebExtension.class);
         extension.lintianTag("tag1");
         extension.lintianTag("tag2");
         extension.lintianTags(Set.of("tag3", "tag4"));
 
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
+        final Set<String> tags = task.createLintianTags();
+        assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
+    }
+
+    @Test
+    public void testTaskLintianTagsAdditionalTags() {
+        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
+        task.lintianTag("tag1");
+        task.lintianTag("tag2");
+        task.lintianTags(Set.of("tag3", "tag4"));
+
         final Set<String> tags = task.createLintianTags();
         assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
     }

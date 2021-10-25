@@ -1,8 +1,13 @@
+import com.cthing.gradle.plugins.deb.DebExtension
 import com.cthing.gradle.plugins.deb.DebTask
 
 apply {
     plugin("com.cthing.project")
     plugin("com.cthing.deb")
+}
+
+configure<DebExtension> {
+    additionalVariables.set(mapOf("architecture" to "all"))
 }
 
 val debTask = tasks.create("generateDeb", DebTask::class.java) {
@@ -12,10 +17,5 @@ val debTask = tasks.create("generateDeb", DebTask::class.java) {
     cs.from(file("SampleFile.txt")) {
         into("usr/bin")
     }
-
-//    doLast {
-//        val distDir = File(buildDir, "distributions")
-//        verify(distDir.exists(), "$distDir exists", "not found")
-//    }
 }
 

@@ -11,16 +11,15 @@ import org.gradle.api.Project;
 /**
  * Creates Debian packages.
  */
+@SuppressWarnings("unused")
 public class DebPlugin implements Plugin<Project> {
 
     public static final String DEB_EXTENSION = "deb";
-
-    private DebExtension extension;
 
     @Override
     public void apply(final Project project) {
         project.getPluginManager().apply("base");
 
-        this.extension = project.getExtensions().create(DEB_EXTENSION, DebExtension.class, project);
+        project.getExtensions().create(DEB_EXTENSION, DebExtension.class, project);
     }
 }

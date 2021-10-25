@@ -43,6 +43,28 @@ public class DebPackagingTest {
         assertThat(outcome).isSuccess();
 
         final File repoDir = new File(project.getBuildDir(), "distributions");
-        assertThat(repoDir).isDirectoryContaining("regex:.*project_\\d+\\.\\d+\\.\\d+-\\d+\\_amd64\\.deb");
+        assertThat(repoDir).isDirectoryContaining("regex:.*project_0\\.1\\.0-\\d+\\_all\\.deb");
+    }
+
+    @Test
+    public void withConffiles(final Project project) {
+        copyResources(project, "with-conffiles");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+    }
+
+    @Test
+    public void withScripts(final Project project) {
+        copyResources(project, "with-scripts");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
     }
 }

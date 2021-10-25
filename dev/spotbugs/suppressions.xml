@@ -13,6 +13,10 @@
         <Class name="~.*DebTask"/>
     </Match>
     <Match>
+        <Bug pattern="UAC_UNNECESSARY_API_CONVERSION_FILE_TO_PATH"/>
+        <Class name="~.*DebTask"/>
+    </Match>
+    <Match>
         <Class name="~.*Test(\$.+)?"/>
     </Match>
 </FindBugsFilter>

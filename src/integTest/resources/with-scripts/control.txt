@@ -1,8 +1,8 @@
-Package: ${project_name}
-Version: ${project_version}
+Package: test-package
+Version: 1.2.3
 Description: Testing package
  A test package for integration testing
 Maintainer: Test User <tester@cthing.com>
-Architecture: ${architecture}
+Architecture: amd64
 Priority: optional
 Section: utils
