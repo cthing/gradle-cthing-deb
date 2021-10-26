@@ -4,7 +4,12 @@
  */
 package com.cthing.gradle.plugins.deb;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.gradle.api.Project;
 import org.junit.jupiter.api.Test;
@@ -18,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static com.cthing.gradle.plugins.test.PluginTestUtils.assertThat;
 import static com.cthing.gradle.plugins.test.PluginTestUtils.copyResources;
 import static com.cthing.gradle.plugins.test.PluginTestUtils.runBuild;
+
+import static org.assertj.core.api.Assertions.fail;
 
 
 public class DebPackagingTest {
@@ -34,6 +41,7 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageContents(project, packageFile)).contains("./usr/bin/SampleFile.txt");
     }
 
     @Test
@@ -55,6 +63,7 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageContents(project, packageFile)).contains("./var/lib/SampleFile.txt");
     }
 
     @Test
@@ -66,5 +75,27 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageContents(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+    }
+
+    private Set<String> readPackageContents(final Project project, final File packageFile) {
+        final Set<String> files = new HashSet<>();
+
+        try (ByteArrayOutputStream outs = new ByteArrayOutputStream()) {
+            project.exec(es -> {
+                es.setStandardOutput(outs);
+                es.commandLine("/usr/bin/dpkg-deb", "-c", packageFile);
+            });
+
+            final String output = outs.toString(StandardCharsets.UTF_8);
+            output.lines().forEach(line -> {
+                final String[] fields = line.split("\\s+");
+                files.add(fields[5]);
+            });
+        } catch (final IOException ex) {
+            fail("Could not obtain package contents", ex);
+        }
+
+        return files;
     }
 }
