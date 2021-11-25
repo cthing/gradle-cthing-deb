@@ -304,11 +304,25 @@ public class DebTask extends DefaultTask {
     }
 
     /**
+     * Indicates whether the DEB packaging tools exist on the system.
+     *
+     * @return {@code true} if the DEB packaging tools are present on the system.
+     */
+    public static boolean toolsExist() {
+        return new File(DPKG_DEB_TOOL).exists() && new File(LINTIAN_TOOL).exists();
+
+    }
+
+    /**
      * Supervises the creation of the Debian package.
      */
     @TaskAction
     public void run() {
         getLogging().captureStandardOutput(LogLevel.INFO);
+
+        if (!toolsExist()) {
+            throw new GradleException("Could not find DEB packaging tools (e.g. " + DPKG_DEB_TOOL + ")");
+        }
 
         // Start with a clean working directory.
         final File wdir = this.workingDir.get();
