@@ -7,11 +7,12 @@ apply {
 
 val debTask = tasks.create("generateDeb", DebTask::class.java) {
     debianDir.set(file("debian"))
-    lintianTag("non-etc-file-marked-as-conffile")
 
     val cs = copySpec.get()
     cs.from(file("SampleFile.txt")) {
-        into("var/lib")
+        into("usr/bin")
+    }
+    cs.from(file("foobar.service")) {
+        into("lib/systemd/system")
     }
 }
-

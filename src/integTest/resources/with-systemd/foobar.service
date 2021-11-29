@@ -1,0 +1,14 @@
+[Unit]
+Description=Miller build orchestration service
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+User=cthing
+EnvironmentFile=/etc/sysconfig/miller
+ExecStart=/usr/lib/miller/miller.jar
+SuccessExitStatus=130
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target

@@ -46,10 +46,9 @@ public class DebPluginTest {
     public void testTaskDefaults() {
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         assertThat(task).isNotNull();
-        assertThat(task.getControlFile().isPresent()).isFalse();
-        assertThat(task.getConffilesFile().isPresent()).isFalse();
+        assertThat(task.getDebianDir().isPresent()).isFalse();
         assertThat(task.getDestinationDir().get()).isEqualTo(new File(this.project.getBuildDir(), "distributions"));
-        assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.project.getBuildDir(), "debbuild/generateDeb"));
+        assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.project.getBuildDir(), "debian-build/generateDeb"));
         assertThat(task.getAdditionalVariables().get()).isEmpty();
         assertThat(task.getCopySpec().get()).isNotNull();
     }
@@ -58,7 +57,7 @@ public class DebPluginTest {
     public void testVariables() {
         final SemanticVersion version = (SemanticVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, Object> variables = task.createControlVariables();
+        final Map<String, Object> variables = task.createTemplateVariables();
         assertThat(variables).isNotNull();
         assertThat(variables).containsEntry("project_group", this.project.getGroup());
         assertThat(variables).containsEntry("project_name", this.project.getName());
@@ -86,7 +85,7 @@ public class DebPluginTest {
         task.additionalVariable("m1", "v1");
         task.additionalVariables(Map.of("m2", "v2", "m3", proc));
 
-        final Map<String, Object> variables = task.createControlVariables();
+        final Map<String, Object> variables = task.createTemplateVariables();
         assertThat(variables).containsEntry("em1", "ev1");
         assertThat(variables).containsEntry("m1", "v1");
         assertThat(variables).containsEntry("m2", "v2");

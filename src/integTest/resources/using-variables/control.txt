@@ -1,8 +1,0 @@
-Package: ${project_name}
-Version: ${project_version}
-Description: Testing package
- A test package for integration testing
-Maintainer: Test User <tester@cthing.com>
-Architecture: ${architecture}
-Priority: optional
-Section: utils

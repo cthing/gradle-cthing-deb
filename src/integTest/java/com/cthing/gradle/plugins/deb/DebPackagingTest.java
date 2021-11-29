@@ -30,10 +30,10 @@ import static org.assertj.core.api.Assertions.fail;
 public class DebPackagingTest {
 
     @RegisterExtension
-    public final GradleTestProjectExtension extension = new GradleTestProjectExtension("project");
+    public final GradleTestProjectExtension extension = new GradleTestProjectExtension("test-package");
 
     @Test
-    public void simpleProject(final Project project) {
+    public void simplePackage(final Project project) {
         copyResources(project, "simple-package");
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
@@ -41,7 +41,8 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageContents(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
     }
 
     @Test
@@ -51,7 +52,7 @@ public class DebPackagingTest {
         assertThat(outcome).isSuccess();
 
         final File repoDir = new File(project.getBuildDir(), "distributions");
-        assertThat(repoDir).isDirectoryContaining("regex:.*project_0\\.1\\.0-\\d+\\_all\\.deb");
+        assertThat(repoDir).isDirectoryContaining("regex:.*test-package_0\\.1\\.0-\\d+\\_all\\.deb");
     }
 
     @Test
@@ -63,7 +64,8 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageContents(project, packageFile)).contains("./var/lib/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./var/lib/SampleFile.txt");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./conffiles");
     }
 
     @Test
@@ -75,10 +77,25 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageContents(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
+                                                                      "./postrm", "./preinst", "./prerm");
     }
 
-    private Set<String> readPackageContents(final Project project, final File packageFile) {
+    @Test
+    public void withSystemd(final Project project) {
+        copyResources(project, "with-systemd");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
+                                                                      "./postrm", "./prerm");
+    }
+
+    private Set<String> readPackageData(final Project project, final File packageFile) {
         final Set<String> files = new HashSet<>();
 
         try (ByteArrayOutputStream outs = new ByteArrayOutputStream()) {
@@ -93,7 +110,26 @@ public class DebPackagingTest {
                 files.add(fields[5]);
             });
         } catch (final IOException ex) {
-            fail("Could not obtain package contents", ex);
+            fail("Could not obtain package data", ex);
+        }
+
+        return files;
+    }
+
+    private Set<String> readPackageControl(final Project project, final File packageFile) {
+        final Set<String> files = new HashSet<>();
+
+        try (ByteArrayOutputStream outs = new ByteArrayOutputStream()) {
+            project.exec(es -> {
+                es.setStandardOutput(outs);
+                es.commandLine("/usr/bin/bash", "-c",
+                               String.format("/usr/bin/dpkg-deb --ctrl-tarfile %s | /usr/bin/tar t", packageFile));
+            });
+
+            final String output = outs.toString(StandardCharsets.UTF_8);
+            output.lines().forEach(files::add);
+        } catch (final IOException ex) {
+            fail("Could not obtain package control", ex);
         }
 
         return files;

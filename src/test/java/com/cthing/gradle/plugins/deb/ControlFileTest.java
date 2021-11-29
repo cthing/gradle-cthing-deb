@@ -23,7 +23,8 @@ public class ControlFileTest {
         assertThat(controlFile.getPackage()).isNull();
         assertThat(controlFile.getVersion()).isNull();
         assertThat(controlFile.getArchitecture()).isNull();
-        assertThat(controlFile).hasToString("null_null_null");
+        assertThat(controlFile.getPackageFilename()).isEqualTo("null_null_null.deb");
+        assertThat(controlFile).hasToString("null_null_null.deb");
     }
 
     @Test
@@ -35,7 +36,8 @@ public class ControlFileTest {
         assertThat(controlFile.getPackage()).isEqualTo("pkg");
         assertThat(controlFile.getVersion()).isEqualTo("1.2.3");
         assertThat(controlFile.getArchitecture()).isEqualTo("amd64");
-        assertThat(controlFile).hasToString("pkg_1.2.3_amd64");
+        assertThat(controlFile.getPackageFilename()).isEqualTo("pkg_1.2.3_amd64.deb");
+        assertThat(controlFile).hasToString("pkg_1.2.3_amd64.deb");
     }
 
     @Test
@@ -89,7 +91,10 @@ public class ControlFileTest {
                         + "\n";
 
         final InputStream ins = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
-        assertThatExceptionOfType(GradleException.class).isThrownBy(() -> ControlFile.parse(ins));
+        final ControlFile controlFile = ControlFile.parse(ins);
+        assertThat(controlFile).isNotNull();
+        assertThat(controlFile.get("Key1")).isEqualTo("Value1");
+        assertThat(controlFile.get("Key2")).isEqualTo("Value2");
     }
 
     @Test

@@ -12,8 +12,10 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermissions;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +40,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFile;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -64,17 +66,12 @@ import freemarker.template.TemplateExceptionHandler;
 public class DebTask extends DefaultTask {
 
     private static final Logger LOGGER = Logging.getLogger(DebTask.class);
-    private static final String DPKG_DEB_TOOL = "/usr/bin/dpkg-deb";
+    private static final String DPKG_BUILDPACKAGE_TOOL = "/usr/bin/dpkg-buildpackage";
     private static final String LINTIAN_TOOL = "/usr/bin/lintian";
 
     private final freemarker.template.Configuration templateConfig;
-    private final Property<File> controlFile;
+    private final Property<File> debianDir;
     private final Property<CopySpec> copySpec;
-    private final Property<File> conffilesFile;
-    private final Property<File> preinstFile;
-    private final Property<File> postinstFile;
-    private final Property<File> prermFile;
-    private final Property<File> postrmFile;
     private final Property<File> destinationDir;
     private final Property<File> workingDir;
     private final Property<String> organization;
@@ -85,18 +82,14 @@ public class DebTask extends DefaultTask {
         setDescription("Create a Debian package");
         setGroup("Packaging");
 
-        final Provider<File> defaultDestDir = getProject().getExtensions().getByType(BasePluginExtension.class)
+        final Project project = getProject();
+        final Provider<File> defaultDestDir = project.getExtensions().getByType(BasePluginExtension.class)
                                                           .getDistsDirectory().getAsFile();
-        final File defaultWorkingDir = new File(getProject().getBuildDir(), "debbuild/" + getName());
+        final File defaultWorkingDir = new File(project.getBuildDir(), "debian-build/" + getName());
 
-        final ObjectFactory objects = getProject().getObjects();
-        this.controlFile = objects.property(File.class);
-        this.copySpec = objects.property(CopySpec.class).convention(getProject().copySpec());
-        this.conffilesFile = objects.property(File.class);
-        this.preinstFile = objects.property(File.class);
-        this.postinstFile = objects.property(File.class);
-        this.prermFile = objects.property(File.class);
-        this.postrmFile = objects.property(File.class);
+        final ObjectFactory objects = project.getObjects();
+        this.debianDir = objects.property(File.class);
+        this.copySpec = objects.property(CopySpec.class).convention(project.copySpec());
         this.destinationDir = objects.property(File.class).convention(defaultDestDir);
         this.workingDir = objects.property(File.class).convention(defaultWorkingDir);
         this.organization = objects.property(String.class).convention("C Thing Software");
@@ -116,13 +109,14 @@ public class DebTask extends DefaultTask {
     }
 
     /**
-     * Obtains the Debian control file.
+     * Obtains the directory containing the control and other configuration files. The directory is copied to the
+     * working directory and variable replacement is performed.
      *
-     * @return Debian control file.
+     * @return Debian configuration directory.
      */
-    @InputFile
-    public Property<File> getControlFile() {
-        return this.controlFile;
+    @InputDirectory
+    public Property<File> getDebianDir() {
+        return this.debianDir;
     }
 
     /**
@@ -134,62 +128,6 @@ public class DebTask extends DefaultTask {
     @Internal
     public Property<CopySpec> getCopySpec() {
         return this.copySpec;
-    }
-
-    /**
-     * Obtains the file which lists configuration files for the package.
-     *
-     * @return File which lists configuration files for the package. If there are no configuration files in
-     *      the package, this property can be left unspecified.
-     */
-    @InputFile
-    @Optional
-    public Property<File> getConffilesFile() {
-        return this.conffilesFile;
-    }
-
-    /**
-     * Obtains the package pre-install script.
-     *
-     * @return Package pre-install script.
-     */
-    @InputFile
-    @Optional
-    public Property<File> getPreinstFile() {
-        return preinstFile;
-    }
-
-    /**
-     * Obtains the package post-install script.
-     *
-     * @return Package post-install script.
-     */
-    @InputFile
-    @Optional
-    public Property<File> getPostinstFile() {
-        return postinstFile;
-    }
-
-    /**
-     * Obtains the package pre-remove script.
-     *
-     * @return Package pre-remove script.
-     */
-    @InputFile
-    @Optional
-    public Property<File> getPrermFile() {
-        return prermFile;
-    }
-
-    /**
-     * Obtains the package post-remove script.
-     *
-     * @return Package post-remove script.
-     */
-    @InputFile
-    @Optional
-    public Property<File> getPostrmFile() {
-        return postrmFile;
     }
 
     /**
@@ -309,7 +247,7 @@ public class DebTask extends DefaultTask {
      * @return {@code true} if the DEB packaging tools are present on the system.
      */
     public static boolean toolsExist() {
-        return new File(DPKG_DEB_TOOL).exists() && new File(LINTIAN_TOOL).exists();
+        return new File(DPKG_BUILDPACKAGE_TOOL).exists() && new File(LINTIAN_TOOL).exists();
 
     }
 
@@ -321,90 +259,111 @@ public class DebTask extends DefaultTask {
         getLogging().captureStandardOutput(LogLevel.INFO);
 
         if (!toolsExist()) {
-            throw new GradleException("Could not find DEB packaging tools (e.g. " + DPKG_DEB_TOOL + ")");
+            throw new GradleException("Could not find Debian packaging tools (e.g. " + DPKG_BUILDPACKAGE_TOOL + ")");
         }
 
         // Start with a clean working directory.
         final File wdir = this.workingDir.get();
         FileUtils.deleteDir(wdir);
 
-        // Create the working and binary packaging directory.
-        final File debianDir = new File(wdir, "DEBIAN");
-        FileUtils.makeDirs(debianDir);
+        // Create the working and configuration directories.
+        final File dstDebianDir = new File(wdir, "debian");
+        FileUtils.makeDirs(dstDebianDir);
 
-        // Copy the conffiles file into place.
-        copyToDebianDir(debianDir, this.conffilesFile, "conffiles", "rw-r--r--");
+        // Copy the debian directory to the working directory.
+        final File srcDebianDir = this.debianDir.get();
+        FileUtils.copyDir(srcDebianDir, dstDebianDir);
 
-        // Copy installation scripts
-        copyToDebianDir(debianDir, this.preinstFile, "preinst", "rwxr-xr-x");
-        copyToDebianDir(debianDir, this.postinstFile, "postinst", "rwxr-xr-x");
-        copyToDebianDir(debianDir, this.prermFile, "prerm", "rwxr-xr-x");
-        copyToDebianDir(debianDir, this.postrmFile, "postrm", "rwxr-xr-x");
+        // Perform variable replacement on specific configuration files.
+        copyConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog", "conffiles");
 
-        // Process the control file into place.
-        final Path dstControlFile = copyControlFile(debianDir);
+        final ControlFile sourceControlFile = parseSourceControlFile(dstDebianDir);
 
         // Configure the copy specification and copy the files into the package.
-        copyContents(wdir);
+        copyContents(dstDebianDir, sourceControlFile.getPackage());
 
         // Build the package.
-        buildPackage(wdir, dstControlFile);
+        final File packageFile = buildPackage(wdir, dstDebianDir, sourceControlFile.getPackage());
 
         // Lint the built package.
-        lintPackage(dstControlFile);
+        lintPackage(packageFile);
     }
 
-    private Path copyControlFile(final File debianDir) {
-        final File srcControlFile = this.controlFile.get();
-        final Path dstControlFile = debianDir.toPath().resolve("control");
-        try (Writer writer = new OutputStreamWriter(Files.newOutputStream(dstControlFile),
-                                                    StandardCharsets.UTF_8)) {
-            final Map<String, Object> variables = createControlVariables();
-            final Template temp = this.templateConfig.getTemplate(srcControlFile.getPath());
-            temp.process(variables, writer);
-        } catch (final IOException | TemplateException ex) {
-            throw new TaskExecutionException(this, ex);
+    private void copyConfigFiles(final File srcDebianDir, final File dstDebianDir, final String... confFilenames) {
+        final Map<String, Object> variables = createTemplateVariables();
+
+        for (String confFilename : confFilenames) {
+            final File srcConfFile = new File(srcDebianDir, confFilename);
+            if (srcConfFile.exists()) {
+                final Path dstConfFile = dstDebianDir.toPath().resolve(srcConfFile.getName());
+                try (Writer writer = new OutputStreamWriter(Files.newOutputStream(dstConfFile),
+                                                            StandardCharsets.UTF_8)) {
+                    final Template temp = this.templateConfig.getTemplate(srcConfFile.getPath());
+                    temp.process(variables, writer);
+                } catch (final IOException | TemplateException ex) {
+                    throw new TaskExecutionException(this, ex);
+                }
+            }
         }
-        return dstControlFile;
     }
 
-    private void copyContents(final File wdir) {
+    private void copyContents(final File dstDebianDir, final String packageName) {
+        final File dstDir = new File(dstDebianDir, packageName);
         final CopySpec cspec = this.copySpec.getOrNull();
         if (cspec == null) {
             throw new GradleException("copySpec property must not be null");
         }
         cspec.into("");
         getProject().copy(cs -> {
-            cs.into(wdir);
+            cs.into(dstDir);
             cs.with(cspec);
         });
     }
 
-    private void buildPackage(final File wdir, final Path ctrlFile) {
-        final List<String> dpkgDebArgs = new ArrayList<>();
-        dpkgDebArgs.add(DPKG_DEB_TOOL);
-        dpkgDebArgs.add("--build");
-        dpkgDebArgs.add("--root-owner-group");
-        dpkgDebArgs.add(wdir.getPath());
-        dpkgDebArgs.add(this.destinationDir.get().getPath());
+    private File buildPackage(final File wdir, final File dstDebianDir, final String packageName) {
+        final List<String> dpkgBuildArgs = new ArrayList<>();
+        dpkgBuildArgs.add(DPKG_BUILDPACKAGE_TOOL);
+        dpkgBuildArgs.add("--build=binary");
+        dpkgBuildArgs.add("--no-pre-clean");
+        dpkgBuildArgs.add("--no-sign");
 
-        LOGGER.info(String.format("Running %s on control file %s", DPKG_DEB_TOOL, ctrlFile));
+        LOGGER.info(String.format("Running %s in  %s", DPKG_BUILDPACKAGE_TOOL, wdir));
         getProject().exec(es -> {
-            es.commandLine(dpkgDebArgs);
+            es.commandLine(dpkgBuildArgs);
+            es.workingDir(wdir);
             es.setErrorOutput(System.out);
         });
+
+        final ControlFile controlFile = parseBinaryControlFile(dstDebianDir, packageName);
+        final File packageFile = new File(wdir.getParentFile(), controlFile.getPackageFilename());
+
+        getProject().copy(cs -> {
+            cs.from(packageFile);
+            cs.into(this.destinationDir);
+        });
+
+        return packageFile;
     }
 
-    private void lintPackage(final Path ctrlFile) {
-        final ControlFile parsedControlFile;
+    private ControlFile parseSourceControlFile(final File dstDebianDir) {
+        final Path ctrlFile = dstDebianDir.toPath().resolve("control");
+        return parseControlFile(ctrlFile);
+    }
+
+    private ControlFile parseBinaryControlFile(final File dstDebianDir, final String packageName) {
+        final Path ctrlFile = dstDebianDir.toPath().resolve(packageName).resolve("DEBIAN/control");
+        return parseControlFile(ctrlFile);
+    }
+
+    private ControlFile parseControlFile(final Path ctrlFile) {
         try (InputStream ins = Files.newInputStream(ctrlFile)) {
-            parsedControlFile = ControlFile.parse(ins);
+            return ControlFile.parse(ins);
         } catch (final IOException ex) {
             throw new TaskExecutionException(this, ex);
         }
+    }
 
-        final String packageName = parsedControlFile + ".deb";
-        final File packageFile = new File(this.destinationDir.get(), packageName);
+    private void lintPackage(final File packageFile) {
         final List<String> lintianArgs = new ArrayList<>();
         lintianArgs.add(LINTIAN_TOOL);
         createLintianTags().forEach(tag -> {
@@ -420,28 +379,12 @@ public class DebTask extends DefaultTask {
         });
     }
 
-    private void copyToDebianDir(final File debianDir, final Property<File> property, final String filename,
-                                 final String perms) {
-        final File file = property.getOrNull();
-        if (file != null) {
-            final File destFile = new File(debianDir, filename);
-            FileUtils.copyFile(file, destFile, true);
-            if (perms != null) {
-                try {
-                    Files.setPosixFilePermissions(destFile.toPath(), PosixFilePermissions.fromString(perms));
-                } catch (final IOException ex) {
-                    throw new TaskExecutionException(this, ex);
-                }
-            }
-        }
-    }
-
     /**
-     * Creates the Debian control file variable entries.
+     * Creates the template variables for use in the Debian configuration files (e.g. control).
      *
      * @return Map of variable names to their values.
      */
-    Map<String, Object> createControlVariables() {
+    Map<String, Object> createTemplateVariables() {
         final Project project = getProject();
         final Object projectVersion = project.getVersion();
         final SemanticVersion version = (projectVersion instanceof SemanticVersion)
@@ -453,6 +396,8 @@ public class DebTask extends DefaultTask {
         variables.put("project_semantic_version", version.getSemanticVersion());
         variables.put("project_build_number", version.getBuildNumber());
         variables.put("project_build_date", version.getBuildDate());
+        variables.put("project_build_year", getBuildYear(version));
+        variables.put("project_changelog_date", getChangelogDate(version));
         variables.put("project_branch", version.getBranch());
         variables.put("project_commit", version.getCommit());
         variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
@@ -482,6 +427,28 @@ public class DebTask extends DefaultTask {
         this.additionalVariables.get().forEach((key, value) -> variables.put(key, stringize(value)));
 
         return variables;
+    }
+
+    /**
+     * Obtains the build date in the format required by the Debian changelog file.
+     *
+     * @param version Semantic version
+     * @return Build date formatted in accordance with the Debian changelog file requirements.
+     */
+    static String getChangelogDate(final SemanticVersion version) {
+        final DateFormat changelogDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
+        return changelogDateFormat.format(new Date(version.getBuildDateMillis()));
+    }
+
+    /**
+     * Obtains the year in which the build occurred.
+     *
+     * @param version Semantic version
+     * @return Year in which the build occurred
+     */
+    private static String getBuildYear(final SemanticVersion version) {
+        final DateFormat currentYearFormat = new SimpleDateFormat("yyyy");
+        return currentYearFormat.format(new Date(version.getBuildDateMillis()));
     }
 
     /**

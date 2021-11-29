@@ -1,0 +1,10 @@
+Source: ${project_name}
+Maintainer: Test User <tester@cthing.com>
+Priority: optional
+Section: utils
+Build-Depends: debhelper (>= 9)
+
+Package: ${project_name}
+Description: Testing package
+ A test package for integration testing
+Architecture: ${architecture}

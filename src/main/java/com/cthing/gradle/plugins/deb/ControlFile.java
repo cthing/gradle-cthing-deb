@@ -83,6 +83,15 @@ public class ControlFile {
     }
 
     /**
+     * Obtains the filename for the package.
+     *
+     * @return Package filename
+     */
+    public String getPackageFilename() {
+        return String.format("%s_%s_%s.deb", getPackage(), getVersion(), getArchitecture());
+    }
+
+    /**
      * Parses a Debian binary package control file.
      *
      * @param ins Control file to parse
@@ -104,8 +113,9 @@ public class ControlFile {
                     break;
                 }
 
+                // Ignore empty lines
                 if (line.length() == 0) {
-                    throw new GradleException("Empty line in control file on line " + reader.getLineNumber());
+                    continue;
                 }
 
                 // Ignore comment lines
@@ -146,6 +156,6 @@ public class ControlFile {
 
     @Override
     public String toString() {
-        return String.format("%s_%s_%s", getPackage(), getVersion(), getArchitecture());
+        return getPackageFilename();
     }
 }

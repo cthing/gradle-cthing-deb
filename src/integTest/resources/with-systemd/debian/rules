@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+clean:
+	@# Do nothing
+
+build:
+	@# Do nothing
+
+binary:
+	dh_testroot
+	dh_systemd_enable
+	dh_systemd_start
+	dh_installdocs
+	dh_installchangelogs
+	dh_compress
+	dh_installdeb
+	dh_md5sums
+	dh_gencontrol
+	dh_builddeb

@@ -11,7 +11,7 @@ configure<DebExtension> {
 }
 
 val debTask = tasks.create("generateDeb", DebTask::class.java) {
-    controlFile.set(file("control.txt"))
+    debianDir.set(file("debian"))
 
     val cs = copySpec.get()
     cs.from(file("SampleFile.txt")) {
