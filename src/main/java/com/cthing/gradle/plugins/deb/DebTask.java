@@ -275,7 +275,7 @@ public class DebTask extends DefaultTask {
         FileUtils.copyDir(srcDebianDir, dstDebianDir);
 
         // Perform variable replacement on specific configuration files.
-        copyConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog", "conffiles");
+        copyConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog");
 
         final ControlFile sourceControlFile = parseSourceControlFile(dstDebianDir);
 

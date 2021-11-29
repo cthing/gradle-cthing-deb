@@ -56,19 +56,6 @@ public class DebPackagingTest {
     }
 
     @Test
-    public void withConffiles(final Project project) {
-        copyResources(project, "with-conffiles");
-        final BuildOutcome outcome = runBuild(project, "generateDeb");
-        assertThat(outcome).isSuccess();
-
-        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
-        assertThat(packageFile).isFile();
-        assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./var/lib/SampleFile.txt");
-        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./conffiles");
-    }
-
-    @Test
     public void withScripts(final Project project) {
         copyResources(project, "with-scripts");
         final BuildOutcome outcome = runBuild(project, "generateDeb");

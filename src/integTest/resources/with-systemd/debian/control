@@ -2,7 +2,7 @@ Source: test-package
 Maintainer: Test User <tester@cthing.com>
 Priority: optional
 Section: utils
-Build-Depends: debhelper (>= 10)
+Build-Depends: debhelper (>= 12)
 
 Package: test-package
 Description: Testing package
