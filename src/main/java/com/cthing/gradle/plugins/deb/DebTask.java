@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -23,12 +24,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.cthing.projectinfo.License;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.file.CopySpec;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -71,7 +72,6 @@ public class DebTask extends DefaultTask {
 
     private final freemarker.template.Configuration templateConfig;
     private final Property<File> debianDir;
-    private final Property<CopySpec> copySpec;
     private final Property<File> destinationDir;
     private final Property<File> workingDir;
     private final Property<String> organization;
@@ -89,7 +89,6 @@ public class DebTask extends DefaultTask {
 
         final ObjectFactory objects = project.getObjects();
         this.debianDir = objects.property(File.class);
-        this.copySpec = objects.property(CopySpec.class).convention(project.copySpec());
         this.destinationDir = objects.property(File.class).convention(defaultDestDir);
         this.workingDir = objects.property(File.class).convention(defaultWorkingDir);
         this.organization = objects.property(String.class).convention("C Thing Software");
@@ -117,17 +116,6 @@ public class DebTask extends DefaultTask {
     @InputDirectory
     public Property<File> getDebianDir() {
         return this.debianDir;
-    }
-
-    /**
-     * Obtains the copy specification to use to copy files into the Debian package. The {@link CopySpec#into(Object)}
-     * method should not be specified as it will be set by the task when executed.
-     *
-     * @return Copy specification for copying files into the Debian build directory for package.
-     */
-    @Internal
-    public Property<CopySpec> getCopySpec() {
-        return this.copySpec;
     }
 
     /**
@@ -277,10 +265,10 @@ public class DebTask extends DefaultTask {
         // Perform variable replacement on specific configuration files.
         copyConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog");
 
-        final ControlFile sourceControlFile = parseSourceControlFile(dstDebianDir);
+        // Ensure the rules file is executable
+        makeExecutable(new File(dstDebianDir, "rules"));
 
-        // Configure the copy specification and copy the files into the package.
-        copyContents(dstDebianDir, sourceControlFile.getPackage());
+        final ControlFile sourceControlFile = parseSourceControlFile(dstDebianDir);
 
         // Build the package.
         final File packageFile = buildPackage(wdir, dstDebianDir, sourceControlFile.getPackage());
@@ -307,29 +295,26 @@ public class DebTask extends DefaultTask {
         }
     }
 
-    private void copyContents(final File dstDebianDir, final String packageName) {
-        final File dstDir = new File(dstDebianDir, packageName);
-        final CopySpec cspec = this.copySpec.getOrNull();
-        if (cspec == null) {
-            throw new GradleException("copySpec property must not be null");
+    private void makeExecutable(final File file) {
+        if (file.exists()) {
+            try {
+                Files.setPosixFilePermissions(file.toPath(), PosixFilePermissions.fromString("rwxr-xr-x"));
+            } catch (final IOException ex) {
+                throw new TaskExecutionException(this, ex);
+            }
         }
-        cspec.into("");
-        getProject().copy(cs -> {
-            cs.into(dstDir);
-            cs.with(cspec);
-        });
     }
 
     private File buildPackage(final File wdir, final File dstDebianDir, final String packageName) {
         final List<String> dpkgBuildArgs = new ArrayList<>();
         dpkgBuildArgs.add(DPKG_BUILDPACKAGE_TOOL);
         dpkgBuildArgs.add("--build=binary");
-        dpkgBuildArgs.add("--no-pre-clean");
         dpkgBuildArgs.add("--no-sign");
 
         LOGGER.info(String.format("Running %s in  %s", DPKG_BUILDPACKAGE_TOOL, wdir));
         getProject().exec(es -> {
             es.commandLine(dpkgBuildArgs);
+            es.environment(createEnvironmentVariables(packageName));
             es.workingDir(wdir);
             es.setErrorOutput(System.out);
         });
@@ -427,6 +412,22 @@ public class DebTask extends DefaultTask {
         this.additionalVariables.get().forEach((key, value) -> variables.put(key, stringize(value)));
 
         return variables;
+    }
+
+    /**
+     * Creates the environment variables for use in the Debian rules file. The variables are a super set of those
+     * used for templates but the names are capitalized to follow environment variable naming conventions.
+     *
+     * @param packageName Name of the package from the control file
+     * @return Map of environment variable names to their values.
+     */
+    Map<String, Object> createEnvironmentVariables(final String packageName) {
+        final Map<String, Object> templateVariables = createTemplateVariables();
+        templateVariables.put("PROJECT_PACKAGE_NAME", packageName);
+        templateVariables.put("PROJECT_DEBIAN_DIR", "debian/" + packageName);
+        return templateVariables.entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(entry -> entry.getKey().toUpperCase(), Map.Entry::getValue));
     }
 
     /**

@@ -1,17 +1,8 @@
 #!/usr/bin/make -f
 
-clean:
-	@# Do nothing
+%:
+	dh $@
 
-build:
-	@# Do nothing
-
-binary:
-	dh_testroot
-	dh_installdocs
-	dh_installchangelogs
-	dh_compress
-	dh_installdeb
-	dh_md5sums
-	dh_gencontrol
-	dh_builddeb
+override_dh_auto_install:
+	mkdir -p $(PROJECT_DEBIAN_DIR)/usr/bin
+	install -m 755 $(PROJECT_ROOT_DIR)/SampleFile.txt $(PROJECT_DEBIAN_DIR)/usr/bin/SampleFile

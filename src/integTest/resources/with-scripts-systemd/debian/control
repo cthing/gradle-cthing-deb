@@ -1,0 +1,10 @@
+Source: test-package
+Maintainer: Test User <tester@cthing.com>
+Priority: optional
+Section: utils
+Build-Depends: debhelper (>= 12)
+
+Package: test-package
+Description: Testing package
+ A test package for integration testing
+Architecture: amd64

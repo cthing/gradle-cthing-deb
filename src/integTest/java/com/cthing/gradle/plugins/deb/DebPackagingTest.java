@@ -41,7 +41,7 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
     }
 
@@ -64,7 +64,7 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
                                                                       "./postrm", "./preinst", "./prerm");
     }
@@ -77,7 +77,20 @@ public class DebPackagingTest {
         final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile.txt");
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
+                                                                      "./postrm", "./prerm");
+    }
+
+    @Test
+    public void withScriptsSystemd(final Project project) {
+        copyResources(project, "with-scripts-systemd");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
                                                                       "./postrm", "./prerm");
     }

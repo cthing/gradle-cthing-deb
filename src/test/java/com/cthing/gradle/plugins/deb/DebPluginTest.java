@@ -50,11 +50,10 @@ public class DebPluginTest {
         assertThat(task.getDestinationDir().get()).isEqualTo(new File(this.project.getBuildDir(), "distributions"));
         assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.project.getBuildDir(), "debian-build/generateDeb"));
         assertThat(task.getAdditionalVariables().get()).isEmpty();
-        assertThat(task.getCopySpec().get()).isNotNull();
     }
 
     @Test
-    public void testVariables() {
+    public void testTemplateVariables() {
         final SemanticVersion version = (SemanticVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Map<String, Object> variables = task.createTemplateVariables();
@@ -65,13 +64,42 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("project_semantic_version", version.getSemanticVersion());
         assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
         assertThat((String)variables.get("project_build_date")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
+        assertThat((String)variables.get("project_build_year")).matches("[\\d]{4}");
+        assertThat((String)variables.get("project_changelog_date")).matches("[\\w]{3}, [\\d]{2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
         assertThat(variables.get("project_branch")).isNotNull();
         assertThat(variables.get("project_commit")).isNotNull();
         assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
+        assertThat(variables).containsEntry("project_root_dir", this.project.getRootDir().getAbsolutePath());
         assertThat(variables).containsEntry("project_build_dir", this.project.getBuildDir().getAbsolutePath());
         assertThat(variables).containsEntry("project_organization", "C Thing Software");
         assertThat(variables).containsEntry("project_main_resources_dir", new File(this.project.getBuildDir(),
-                                                                                "resources/main").getAbsolutePath());
+                                                                                   "resources/main").getAbsolutePath());
+    }
+
+    @Test
+    public void testEnvironmentVariables() {
+        final SemanticVersion version = (SemanticVersion)this.project.getVersion();
+        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
+        final Map<String, Object> variables = task.createEnvironmentVariables("foobar");
+        assertThat(variables).isNotNull();
+        assertThat(variables).containsEntry("PROJECT_GROUP", this.project.getGroup());
+        assertThat(variables).containsEntry("PROJECT_NAME", this.project.getName());
+        assertThat(variables).containsEntry("PROJECT_VERSION", version.toString());
+        assertThat(variables).containsEntry("PROJECT_SEMANTIC_VERSION", version.getSemanticVersion());
+        assertThat(variables).containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber());
+        assertThat((String)variables.get("PROJECT_BUILD_DATE")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
+        assertThat((String)variables.get("PROJECT_BUILD_YEAR")).matches("[\\d]{4}");
+        assertThat((String)variables.get("PROJECT_CHANGELOG_DATE")).matches("[\\w]{3}, [\\d]{2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
+        assertThat(variables.get("PROJECT_BRANCH")).isNotNull();
+        assertThat(variables.get("PROJECT_COMMIT")).isNotNull();
+        assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
+        assertThat(variables).containsEntry("PROJECT_ROOT_DIR", this.project.getRootDir().getAbsolutePath());
+        assertThat(variables).containsEntry("PROJECT_BUILD_DIR", this.project.getBuildDir().getAbsolutePath());
+        assertThat(variables).containsEntry("PROJECT_ORGANIZATION", "C Thing Software");
+        assertThat(variables).containsEntry("PROJECT_MAIN_RESOURCES_DIR", new File(this.project.getBuildDir(),
+                                                                                   "resources/main").getAbsolutePath());
+        assertThat(variables).containsEntry("PROJECT_PACKAGE_NAME", "foobar");
+        assertThat(variables).containsEntry("PROJECT_DEBIAN_DIR", "debian/foobar");
     }
 
     @Test
