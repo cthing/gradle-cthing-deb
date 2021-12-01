@@ -95,6 +95,16 @@ public class DebPackagingTest {
                                                                       "./postrm", "./prerm");
     }
 
+    @Test
+    public void publishPackage(final Project project) {
+        copyResources(project, "publish-package");
+        final BuildOutcome outcome = runBuild(project, "publish");
+        assertThat(outcome).isSuccess();
+
+        final File repoDir = new File(project.getBuildDir(), "aptrepo/com/cthing/test-package");
+        assertThat(repoDir).isDirectoryContaining("regex:.*test-package_\\d+\\.\\d+\\.\\d+-\\d+_all\\.deb");
+    }
+
     private Set<String> readPackageData(final Project project, final File packageFile) {
         final Set<String> files = new HashSet<>();
 

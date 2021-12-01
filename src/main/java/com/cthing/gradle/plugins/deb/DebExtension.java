@@ -7,10 +7,17 @@ package com.cthing.gradle.plugins.deb;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+
+import com.cthing.gradle.plugins.core.SemanticVersion;
+
+import static com.cthing.gradle.plugins.util.GradleInterop.getProperty;
 
 
 /**
@@ -18,13 +25,43 @@ import org.gradle.api.provider.SetProperty;
  */
 public class DebExtension {
 
+    private static final String CANDIDATE_REPO_PROPERTY = "cthing.nexus.aptCandidatesUrl";
+    private static final String SNAPSHOT_REPO_PROPERTY = "cthing.nexus.aptSnapshotsUrl";
+
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
+    private final Property<String> repositoryUrl;
+    private final Property<String> repositoryPath;
+    private final Property<AuthenticationInfo> authenticationInfo;
 
     public DebExtension(final Project project) {
         final ObjectFactory objects = project.getObjects();
         this.additionalVariables = objects.mapProperty(String.class, Object.class);
         this.lintianTags = objects.setProperty(String.class);
+
+        final Provider<String> defaultRepositoryUrl = project.provider(() -> {
+            final Object projectVersion = project.getVersion();
+            final boolean releaseBuild = (projectVersion instanceof SemanticVersion)
+                    && ((SemanticVersion)projectVersion).isReleaseBuild();
+            final String repositoryUrlProperty = releaseBuild ? CANDIDATE_REPO_PROPERTY : SNAPSHOT_REPO_PROPERTY;
+            return getProperty(project, repositoryUrlProperty, null);
+        });
+        this.repositoryUrl = objects.property(String.class).convention(defaultRepositoryUrl);
+
+        final Provider<String> defaultRepositoryPath = project.provider(() -> {
+            final String group = project.getGroup().toString().replaceAll("\\.", "/");
+            final String name = project.getName();
+            return String.format("%s/%s", group, name);
+        });
+        this.repositoryPath = objects.property(String.class).convention(defaultRepositoryPath);
+
+        this.authenticationInfo = objects.property(AuthenticationInfo.class);
+        if (project.hasProperty("cthing.nexus.user") && project.hasProperty("cthing.nexus.password")) {
+            final AuthenticationInfo authInfo = new AuthenticationInfo();
+            authInfo.setUserName(getProperty(project, "cthing.nexus.user"));
+            authInfo.setPassword(getProperty(project, "cthing.nexus.password"));
+            this.authenticationInfo.convention(authInfo);
+        }
     }
 
     /**
@@ -86,5 +123,33 @@ public class DebExtension {
      */
     public void lintianTag(final String tag) {
         this.lintianTags.add(tag);
+    }
+
+    /**
+     * Obtains the URL to the APT repository.
+     *
+     * @return APT repository URL.
+     */
+    public Property<String> getRepositoryUrl() {
+        return this.repositoryUrl;
+    }
+
+    /**
+     * Obtains the path of the package within the APT repository.
+     *
+     * @return Path within the APT repository. The default path is {@literal <group ID as a path>/<project name>}.
+     *      For example, {@literal com/cthing/apron-cli}.
+     */
+    public Property<String> getRepositoryPath() {
+        return this.repositoryPath;
+    }
+
+    /**
+     * Obtains the repository access authentication information.
+     *
+     * @return Repository access authentication information.
+     */
+    public Property<AuthenticationInfo> getAuthenticationInfo() {
+        return this.authenticationInfo;
     }
 }

@@ -32,6 +32,9 @@ dependencies {
     implementation("com.cthing:gradle-core-plugins:0.1.0-+")
     implementation("org.freemarker:freemarker:2.3.31")
     implementation("org.cthing:projectinfo:1.0.0-+")
+    implementation("org.apache.maven.wagon:wagon-provider-api:3.4.3")
+    implementation("org.apache.maven.wagon:wagon-file:3.4.3")
+    implementation("org.apache.maven.wagon:wagon-http:3.4.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
     testImplementation("org.assertj:assertj-core:3.21.0")
