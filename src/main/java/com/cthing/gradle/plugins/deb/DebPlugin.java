@@ -33,7 +33,7 @@ public class DebPlugin implements Plugin<Project> {
                         task.getAuthenticationInfo().set(extension.getAuthenticationInfo());
                     });
 
-            project.getTasks().withType(DebTask.class, rpmTask -> publishDeb.configure(t -> t.dependsOn(rpmTask)));
+            project.getTasks().withType(DebTask.class, debTask -> publishDeb.configure(t -> t.dependsOn(debTask)));
 
             project.afterEvaluate(proj -> {
                 try {
