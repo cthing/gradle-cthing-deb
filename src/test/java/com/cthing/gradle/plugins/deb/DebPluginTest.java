@@ -65,7 +65,7 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
         assertThat((String)variables.get("project_build_date")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
         assertThat((String)variables.get("project_build_year")).matches("[\\d]{4}");
-        assertThat((String)variables.get("project_changelog_date")).matches("[\\w]{3}, [\\d]{2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
+        assertThat((String)variables.get("project_changelog_date")).matches("[\\w]{3}, [\\d]{1,2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
         assertThat(variables.get("project_branch")).isNotNull();
         assertThat(variables.get("project_commit")).isNotNull();
         assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
@@ -89,7 +89,7 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber());
         assertThat((String)variables.get("PROJECT_BUILD_DATE")).matches("[\\d]{4}-[\\d]{2}-[\\d]{2}T[\\d]{2}:[\\d]{2}:[\\d]{2}Z");
         assertThat((String)variables.get("PROJECT_BUILD_YEAR")).matches("[\\d]{4}");
-        assertThat((String)variables.get("PROJECT_CHANGELOG_DATE")).matches("[\\w]{3}, [\\d]{2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
+        assertThat((String)variables.get("PROJECT_CHANGELOG_DATE")).matches("[\\w]{3}, [\\d]{1,2} [\\w]{3} [\\d]{4} [\\d]{2}:[\\d]{2}:[\\d]{2} [+\\-][\\d]{4}");
         assertThat(variables.get("PROJECT_BRANCH")).isNotNull();
         assertThat(variables.get("PROJECT_COMMIT")).isNotNull();
         assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
