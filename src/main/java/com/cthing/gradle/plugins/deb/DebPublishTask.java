@@ -28,7 +28,6 @@ import org.gradle.api.tasks.TaskAction;
 public class DebPublishTask extends DefaultTask {
 
     private final Property<String> repositoryUrl;
-    private final Property<String> repositoryPath;
     private final Property<AuthenticationInfo> authenticationInfo;
 
     public DebPublishTask() {
@@ -37,7 +36,6 @@ public class DebPublishTask extends DefaultTask {
 
         final ObjectFactory objects = getProject().getObjects();
         this.repositoryUrl = objects.property(String.class);
-        this.repositoryPath = objects.property(String.class).convention("");
         this.authenticationInfo = objects.property(AuthenticationInfo.class);
     }
 
@@ -45,12 +43,6 @@ public class DebPublishTask extends DefaultTask {
     @Optional
     public Property<String> getRepositoryUrl() {
         return this.repositoryUrl;
-    }
-
-    @Input
-    @Optional
-    public Property<String> getRepositoryPath() {
-        return this.repositoryPath;
     }
 
     @Input
@@ -149,10 +141,8 @@ public class DebPublishTask extends DefaultTask {
     protected void uploadFile(final Wagon wagon, final File file) {
         getLogger().info("Uploading {}", file.getName());
 
-        final String repoPathname = String.format("%s/%s", this.repositoryPath.get(), file.getName());
-
         try {
-            wagon.put(file, repoPathname);
+            wagon.put(file, file.getName());
         } catch (final WagonException ex) {
             throw new GradleException(ex.getMessage(), ex);
         }

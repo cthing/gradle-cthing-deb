@@ -31,7 +31,6 @@ public class DebExtension {
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
     private final Property<String> repositoryUrl;
-    private final Property<String> repositoryPath;
     private final Property<AuthenticationInfo> authenticationInfo;
 
     public DebExtension(final Project project) {
@@ -47,13 +46,6 @@ public class DebExtension {
             return getProperty(project, repositoryUrlProperty, null);
         });
         this.repositoryUrl = objects.property(String.class).convention(defaultRepositoryUrl);
-
-        final Provider<String> defaultRepositoryPath = project.provider(() -> {
-            final String group = project.getGroup().toString().replaceAll("\\.", "/");
-            final String name = project.getName();
-            return String.format("%s/%s", group, name);
-        });
-        this.repositoryPath = objects.property(String.class).convention(defaultRepositoryPath);
 
         this.authenticationInfo = objects.property(AuthenticationInfo.class);
         if (project.hasProperty("cthing.nexus.user") && project.hasProperty("cthing.nexus.password")) {
@@ -132,16 +124,6 @@ public class DebExtension {
      */
     public Property<String> getRepositoryUrl() {
         return this.repositoryUrl;
-    }
-
-    /**
-     * Obtains the path of the package within the APT repository.
-     *
-     * @return Path within the APT repository. The default path is {@literal <group ID as a path>/<project name>}.
-     *      For example, {@literal com/cthing/apron-cli}.
-     */
-    public Property<String> getRepositoryPath() {
-        return this.repositoryPath;
     }
 
     /**

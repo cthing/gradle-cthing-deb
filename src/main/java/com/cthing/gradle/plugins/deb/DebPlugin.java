@@ -29,7 +29,6 @@ public class DebPlugin implements Plugin<Project> {
             final TaskProvider<DebPublishTask> publishDeb =
                     project.getTasks().register("publishDeb", DebPublishTask.class, task -> {
                         task.getRepositoryUrl().set(extension.getRepositoryUrl());
-                        task.getRepositoryPath().set(extension.getRepositoryPath());
                         task.getAuthenticationInfo().set(extension.getAuthenticationInfo());
                     });
 

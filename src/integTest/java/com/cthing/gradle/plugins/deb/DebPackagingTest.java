@@ -101,7 +101,7 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "publish");
         assertThat(outcome).isSuccess();
 
-        final File repoDir = new File(project.getBuildDir(), "aptrepo/com/cthing/test-package");
+        final File repoDir = new File(project.getBuildDir(), "aptrepo");
         assertThat(repoDir).isDirectoryContaining("regex:.*test-package_\\d+\\.\\d+\\.\\d+-\\d+_all\\.deb");
     }
 
