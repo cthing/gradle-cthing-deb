@@ -5,14 +5,17 @@
 package com.cthing.gradle.plugins.deb;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.util.function.Consumer;
 
-import org.apache.maven.wagon.ConnectionException;
-import org.apache.maven.wagon.Wagon;
-import org.apache.maven.wagon.WagonException;
-import org.apache.maven.wagon.authentication.AuthenticationInfo;
-import org.apache.maven.wagon.providers.file.FileWagon;
-import org.apache.maven.wagon.providers.http.HttpWagon;
-import org.apache.maven.wagon.repository.Repository;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.model.ObjectFactory;
@@ -20,6 +23,13 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskExecutionException;
+
+import com.cthing.gradle.plugins.util.FileUtils;
+
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 
 /**
@@ -27,8 +37,11 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class DebPublishTask extends DefaultTask {
 
+    private static final int REPO_TIMEOUT = 5;      // Minutes
+
     private final Property<String> repositoryUrl;
-    private final Property<AuthenticationInfo> authenticationInfo;
+    private final Property<String> repositoryUsername;
+    private final Property<String> repositoryPassword;
 
     public DebPublishTask() {
         setDescription("Publish DEB packages to an APT repository");
@@ -36,7 +49,8 @@ public class DebPublishTask extends DefaultTask {
 
         final ObjectFactory objects = getProject().getObjects();
         this.repositoryUrl = objects.property(String.class);
-        this.authenticationInfo = objects.property(AuthenticationInfo.class);
+        this.repositoryUsername = objects.property(String.class);
+        this.repositoryPassword = objects.property(String.class);
     }
 
     @Input
@@ -47,8 +61,14 @@ public class DebPublishTask extends DefaultTask {
 
     @Input
     @Optional
-    public Property<AuthenticationInfo> getAuthenticationInfo() {
-        return this.authenticationInfo;
+    public Property<String> getRepositoryUsername() {
+        return this.repositoryUsername;
+    }
+
+    @Input
+    @Optional
+    public Property<String> getRepositoryPassword() {
+        return this.repositoryPassword;
     }
 
     /**
@@ -60,91 +80,56 @@ public class DebPublishTask extends DefaultTask {
         if (repoUrl == null) {
             getLogger().lifecycle("Repository URL not defined, publish task is a noop");
         } else {
-            final Repository repository = new Repository("debs", repoUrl);
-
-            final Wagon wagon = lookupWagonForRepository(repository);
-            connectWagonToRepository(wagon, repository);
-
             try {
-                getProject().getTasks().withType(DebTask.class, debTask ->
-                        debTask.getArtifacts().forEach(artifact -> uploadFile(wagon, artifact)));
-            } finally {
-                disconnectWagonFromRepository(wagon);
+                final URI repoUri = new URI(repoUrl.endsWith("/") ? repoUrl : (repoUrl + "/"));
+                final Consumer<File> publishProc = "file".equals(repoUri.getScheme())
+                                                   ? artifact -> publishLocal(artifact, repoUri)
+                                                   : artifact -> publishRemote(artifact, repoUri);
+
+                getProject().getTasks().withType(DebTask.class, debTask -> debTask.getArtifacts().forEach(publishProc));
+            } catch (final URISyntaxException ex) {
+                throw new TaskExecutionException(this, ex);
             }
         }
     }
 
-    /**
-     * Attempts to find a Wagon instance that can handle the specified repository.
-     *
-     * @param repository Repository for which a Wagon instance is desired
-     * @return Wagon instance for the specified repository. If a Wagon instance cannot be found, a
-     *      {@link GradleException} is thrown
-     */
-    private Wagon lookupWagonForRepository(final Repository repository) {
-        final Wagon wagon;
-        switch (repository.getProtocol()) {
-            case "http":
-            case "https":
-                wagon = new HttpWagon();
-                break;
-            case "file":
-                wagon = new FileWagon();
-                break;
-            default:
-                throw new GradleException("Unsupported repository protocol: " + repository.getProtocol());
-        }
+    private void publishLocal(final File file, final URI uri) {
+        getLogger().info("Publishing {} to {}", file.getName(), uri);
 
-        final WagonListener listener = new WagonListener();
-        wagon.addSessionListener(listener);
-        wagon.addTransferListener(listener);
-        return wagon;
+        final File path = new File(uri.getPath());
+        if (!path.exists() && !path.mkdirs()) {
+            throw new GradleException("Could not create directory: " + path);
+        }
+        FileUtils.copyFile(file, path, true);
     }
 
-    /**
-     * Associates the specified repository with the specified Wagon instance.
-     *
-     * @param wagon Wagon instance to associate with the specified repository
-     * @param repository Repository to attach to the specified Wagon instance
-     */
-    private void connectWagonToRepository(final Wagon wagon, final Repository repository) {
+    private void publishRemote(final File file, final URI uri) {
+        getLogger().info("Publishing {} to {}", file.getName(), uri);
+
         try {
-            if (this.authenticationInfo.isPresent()) {
-                wagon.connect(repository, this.authenticationInfo.get());
-            } else {
-                wagon.connect(repository);
+            final HttpRequest request = HttpRequest.newBuilder()
+                                                   .uri(uri)
+                                                   .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                                                   .timeout(Duration.of(REPO_TIMEOUT, MINUTES))
+                                                   .build();
+            final PasswordAuthentication authentication =
+                    new PasswordAuthentication(this.repositoryUsername.get(),
+                                               this.repositoryPassword.get().toCharArray());
+            final HttpResponse<String> response = HttpClient.newBuilder()
+                                                            .followRedirects(HttpClient.Redirect.ALWAYS)
+                                                            .authenticator(new Authenticator() {
+                                                                @Override
+                                                                protected PasswordAuthentication getPasswordAuthentication() {
+                                                                    return authentication;
+                                                                }
+                                                            })
+                                                            .build()
+                                                            .send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != HTTP_OK && response.statusCode() != HTTP_CREATED) {
+                throw new GradleException("Unable to upload file: " + response.body());
             }
-        } catch (final WagonException ex) {
-            throw new GradleException(ex.getMessage(), ex);
-        }
-    }
-
-    /**
-     * Disconnects the repository connected to the specified Wagon instance.
-     *
-     * @param wagon Wagon instance whose connected repository is to be disconnected
-     */
-    private void disconnectWagonFromRepository(final Wagon wagon) {
-        try {
-            wagon.disconnect();
-        } catch (final ConnectionException ex) {
-            getLogger().warn("Error while disconnecting from {}", this.repositoryUrl.get(), ex);
-        }
-    }
-
-    /**
-     * Perform the actual upload of the specified file to the repository connected to the specified Wagon instance.
-     *
-     * @param wagon Instance of wagon connection to a repository into which the specified file will be uploaded
-     * @param file File to upload to a repository
-     */
-    protected void uploadFile(final Wagon wagon, final File file) {
-        getLogger().info("Uploading {}", file.getName());
-
-        try {
-            wagon.put(file, file.getName());
-        } catch (final WagonException ex) {
-            throw new GradleException(ex.getMessage(), ex);
+        } catch (final IOException | InterruptedException ex) {
+            throw new TaskExecutionException(this, ex);
         }
     }
 }

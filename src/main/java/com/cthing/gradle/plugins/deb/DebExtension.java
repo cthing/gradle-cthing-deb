@@ -7,7 +7,6 @@ package com.cthing.gradle.plugins.deb;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
@@ -27,11 +26,14 @@ public class DebExtension {
 
     private static final String CANDIDATE_REPO_PROPERTY = "cthing.nexus.aptCandidatesUrl";
     private static final String SNAPSHOT_REPO_PROPERTY = "cthing.nexus.aptSnapshotsUrl";
+    private static final String USERNAME_PROPERTY = "cthing.nexus.user";
+    private static final String PASSWORD_PROPERTY = "cthing.nexus.password";
 
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
     private final Property<String> repositoryUrl;
-    private final Property<AuthenticationInfo> authenticationInfo;
+    private final Property<String> repositoryUsername;
+    private final Property<String> repositoryPassword;
 
     public DebExtension(final Project project) {
         final ObjectFactory objects = project.getObjects();
@@ -47,13 +49,11 @@ public class DebExtension {
         });
         this.repositoryUrl = objects.property(String.class).convention(defaultRepositoryUrl);
 
-        this.authenticationInfo = objects.property(AuthenticationInfo.class);
-        if (project.hasProperty("cthing.nexus.user") && project.hasProperty("cthing.nexus.password")) {
-            final AuthenticationInfo authInfo = new AuthenticationInfo();
-            authInfo.setUserName(getProperty(project, "cthing.nexus.user"));
-            authInfo.setPassword(getProperty(project, "cthing.nexus.password"));
-            this.authenticationInfo.convention(authInfo);
-        }
+        final String defaultUsername = getProperty(project, USERNAME_PROPERTY, null);
+        this.repositoryUsername = objects.property(String.class).convention(defaultUsername);
+
+        final String defaultPassword = getProperty(project, PASSWORD_PROPERTY, null);
+        this.repositoryPassword = objects.property(String.class).convention(defaultPassword);
     }
 
     /**
@@ -127,11 +127,20 @@ public class DebExtension {
     }
 
     /**
-     * Obtains the repository access authentication information.
+     * Obtains the repository access username.
      *
-     * @return Repository access authentication information.
+     * @return Repository access username.
      */
-    public Property<AuthenticationInfo> getAuthenticationInfo() {
-        return this.authenticationInfo;
+    public Property<String> getRepositoryUsername() {
+        return this.repositoryUsername;
+    }
+
+    /**
+     * Obtains the repository access password.
+     *
+     * @return Repository access password.
+     */
+    public Property<String> getRepositoryPassword() {
+        return this.repositoryPassword;
     }
 }
