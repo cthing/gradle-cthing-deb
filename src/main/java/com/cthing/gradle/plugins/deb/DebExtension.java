@@ -31,6 +31,7 @@ public class DebExtension {
 
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
+    private final Property<Boolean> lintianEnable;
     private final Property<String> repositoryUrl;
     private final Property<String> repositoryUsername;
     private final Property<String> repositoryPassword;
@@ -39,6 +40,7 @@ public class DebExtension {
         final ObjectFactory objects = project.getObjects();
         this.additionalVariables = objects.mapProperty(String.class, Object.class);
         this.lintianTags = objects.setProperty(String.class);
+        this.lintianEnable = objects.property(Boolean.class).convention(Boolean.TRUE);
 
         final Provider<String> defaultRepositoryUrl = project.provider(() -> {
             final Object projectVersion = project.getVersion();
@@ -115,6 +117,15 @@ public class DebExtension {
      */
     public void lintianTag(final String tag) {
         this.lintianTags.add(tag);
+    }
+
+    /**
+     * Enables checking packages with Lintian.
+     *
+     * @return Enables checking packages with Lintian. Default is {@code true}.
+     */
+    public Property<Boolean> getLintianEnable() {
+        return this.lintianEnable;
     }
 
     /**

@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	mkdir -p $(PROJECT_DEBIAN_DIR)/usr/lib
+	install -m 755 $(PROJECT_ROOT_DIR)/SampleFile.txt $(PROJECT_DEBIAN_DIR)/usr/lib/SampleFile.py

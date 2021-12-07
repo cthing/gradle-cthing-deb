@@ -105,6 +105,32 @@ public class DebPackagingTest {
         assertThat(repoDir).isDirectoryContaining("regex:.*test-package_\\d+\\.\\d+\\.\\d+-\\d+_all\\.deb");
     }
 
+    @Test
+    public void noLintian(final Project project) {
+        copyResources(project, "no-lintian");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
+    }
+
+    @Test
+    public void lintianTags(final Project project) {
+        copyResources(project, "lintian-tags");
+        final BuildOutcome outcome = runBuild(project, "generateDeb");
+        assertThat(outcome).isSuccess();
+
+        final File packageFile = new File(project.getBuildDir(), "distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");
+        assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
+    }
+
     private Set<String> readPackageData(final Project project, final File packageFile) {
         final Set<String> files = new HashSet<>();
 

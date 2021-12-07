@@ -33,8 +33,10 @@ public class DebExtensionTest {
     }
 
     @Test
-    public void testDefaults(final Project project) {
-        assertThat(extension.getAdditionalVariables().get().size()).isEqualTo(0);
+    public void testDefaults() {
+        assertThat(extension.getAdditionalVariables().get()).hasSize(0);
+        assertThat(extension.getLintianTags().get()).hasSize(0);
+        assertThat(extension.getLintianEnable().get()).isTrue();
     }
 
     @Test
@@ -61,5 +63,11 @@ public class DebExtensionTest {
         this.extension.lintianTag("tag1");
         this.extension.lintianTags(Set.of("tag2", "tag3"));
         assertThat(this.extension.getLintianTags().get()).containsExactlyInAnyOrder("tag1", "tag2", "tag3");
+    }
+
+    @Test
+    public void testLintianEnable() {
+        this.extension.getLintianEnable().set(false);
+        assertThat(this.extension.getLintianEnable().get()).isFalse();
     }
 }
