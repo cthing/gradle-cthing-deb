@@ -105,11 +105,11 @@ public class DebTask extends DefaultTask {
 
         this.templateConfig = new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_28);
         try {
-            templateConfig.setTemplateLoader(new FileTemplateLoader(new File("/"), true));
-            templateConfig.setDefaultEncoding(StandardCharsets.UTF_8.name());
-            templateConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
-            templateConfig.setLogTemplateExceptions(false);
-            templateConfig.setWrapUncheckedExceptions(true);
+            this.templateConfig.setTemplateLoader(new FileTemplateLoader(new File("/"), true));
+            this.templateConfig.setDefaultEncoding(StandardCharsets.UTF_8.name());
+            this.templateConfig.setTemplateExceptionHandler(TemplateExceptionHandler.RETHROW_HANDLER);
+            this.templateConfig.setLogTemplateExceptions(false);
+            this.templateConfig.setWrapUncheckedExceptions(true);
         } catch (final IOException ex) {
             throw new TaskExecutionException(this, ex);
         }
@@ -222,10 +222,10 @@ public class DebTask extends DefaultTask {
     /**
      * Adds the specified Lintian suppression tags.
      *
-     * @param lintianTags Linitian suppression tags.
+     * @param tags Linitian suppression tags.
      */
-    public void lintianTags(final Set<String> lintianTags) {
-        this.lintianTags.addAll(lintianTags);
+    public void lintianTags(final Set<String> tags) {
+        this.lintianTags.addAll(tags);
     }
 
     /**
@@ -344,7 +344,7 @@ public class DebTask extends DefaultTask {
     private void processConfigFiles(final File srcDebianDir, final File dstDebianDir, final String... confFilenames) {
         final Map<String, Object> variables = createTemplateVariables();
 
-        for (String confFilename : confFilenames) {
+        for (final String confFilename : confFilenames) {
             final File srcConfFile = new File(srcDebianDir, confFilename);
             if (srcConfFile.exists()) {
                 final Path dstConfFile = dstDebianDir.toPath().resolve(srcConfFile.getName());

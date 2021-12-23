@@ -73,13 +73,13 @@ public class DebExtension {
     /**
      * Adds the specified map to the existing map of additional variables for use in the Debian control file.
      *
-     * @param additionalVariables  A map consisting of the variable name as the key, and an object whose toString()
+     * @param variables  A map consisting of the variable name as the key, and an object whose toString()
      *      method will generate the variable's value. The default is an empty map meaning that no additional
      *      variables are specified beyond those defined from the build properties. These variables are merged with
      *      any variables defined in the task (task variables take precedence if there are overlapping variables).
      */
-    public void additionalVariables(final Map<String, Object> additionalVariables) {
-        this.additionalVariables.putAll(additionalVariables);
+    public void additionalVariables(final Map<String, Object> variables) {
+        this.additionalVariables.putAll(variables);
     }
 
     /**
@@ -104,10 +104,10 @@ public class DebExtension {
     /**
      * Adds the specified Lintian suppression tags.
      *
-     * @param lintianTags Linitian suppression tags.
+     * @param tags Lintian suppression tags.
      */
-    public void lintianTags(final Set<String> lintianTags) {
-        this.lintianTags.addAll(lintianTags);
+    public void lintianTags(final Set<String> tags) {
+        this.lintianTags.addAll(tags);
     }
 
     /**

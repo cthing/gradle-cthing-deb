@@ -114,7 +114,7 @@ public class ControlFile {
                 }
 
                 // Ignore empty lines
-                if (line.length() == 0) {
+                if (line.isEmpty()) {
                     continue;
                 }
 
