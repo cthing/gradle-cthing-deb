@@ -1,28 +1,16 @@
-import com.cthing.gradle.plugins.core.ProjectInfoExtension
-
 plugins {
     java
+    id("com.cthing.gradle-plugin-project") version "0.1.0-+"
+    id("com.cthing.dependency-analysis") version "0.1.0-+"
 }
 
-buildscript {
-    dependencies {
-        classpath("com.cthing:gradle-core-plugins:0.1.0-+")
-        classpath("com.cthing:gradle-dependency-analysis-plugin:0.1.0-+")
-    }
-}
-
-apply {
-    plugin("com.cthing.gradle-plugin-project")
-    plugin("com.cthing.dependency-analysis")
-}
-
-configure<ProjectInfoExtension> {
+projectInfo {
     description.set("Plugin for creating DEB packages.")
     projectUrl.set("https://github.com/baron1405/gradle-deb-plugin/")
 }
 
-configure<GradlePluginDevelopmentExtension> {
-    plugins.register("debPlugin") {
+gradlePlugin {
+    plugins.create("debPlugin") {
         id = "com.cthing.deb"
         implementationClass = "com.cthing.gradle.plugins.deb.DebPlugin"
     }
