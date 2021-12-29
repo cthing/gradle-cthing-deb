@@ -1,7 +1,8 @@
+@Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     java
-    id("com.cthing.gradle-plugin-project") version "0.1.0-+"
-    id("com.cthing.dependency-analysis") version "0.1.0-+"
+    alias(libs.plugins.pluginProject)
+    alias(libs.plugins.dependencyAnalysis)
 }
 
 projectInfo {
@@ -17,12 +18,12 @@ gradlePlugin {
 }
 
 dependencies {
-    implementation("com.cthing:gradle-core-plugins:0.1.0-+")
-    implementation("org.freemarker:freemarker:2.3.31")
-    implementation("org.cthing:projectinfo:1.0.0-+")
+    implementation(libs.corePlugins)
+    implementation(libs.freemarker)
+    implementation(libs.projectInfo)
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.2")
-    testImplementation("org.assertj:assertj-core:3.21.0")
+    testImplementation(libs.junitApi)
+    testImplementation(libs.assertJ)
 
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testRuntimeOnly(libs.junitEngine)
 }
