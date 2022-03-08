@@ -1,3 +1,5 @@
+apply(from = File(gradle.gradleUserHomeDir, "cthing-repositories.gradle.kts"))
+
 @Suppress("DSL_SCOPE_VIOLATION")
 plugins {
     java
