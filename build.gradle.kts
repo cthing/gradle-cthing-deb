@@ -9,7 +9,7 @@ plugins {
 
 projectInfo {
     description.set("Plugin for creating DEB packages.")
-    projectUrl.set("https://github.com/baron1405/gradle-deb-plugin/")
+    projectUrl.set("https://github.com/cthing/gradle-deb-plugin/")
 }
 
 gradlePlugin {
