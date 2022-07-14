@@ -42,12 +42,13 @@ public class ControlFileTest {
 
     @Test
     public void testParsePlain() {
-        final String input =
-                "Key1: Value1\n"
-                        + "Key2: Value2\n"
-                        + " Value2.1\n"
-                        + " Value2.2\n"
-                        + "Key3: Value3\n";
+        final String input = """
+                        Key1: Value1
+                        Key2: Value2
+                         Value2.1
+                         Value2.2
+                        Key3: Value3
+                        """;
 
         final InputStream ins = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
         final ControlFile controlFile = ControlFile.parse(ins);
@@ -59,19 +60,20 @@ public class ControlFileTest {
 
     @Test
     public void testParseWithComments() {
-        final String input =
-                "Key1: Value1\n"
-                        + "Key2: Value2\n"
-                        + " Value2.1\n"
-                        + "# Value2.2\n"
-                        + "#Key3: Value3comment\n"
-                        + "Key3: Value3\n"
-                        + "# Value3.1\n"
-                        + " Value3.2\n"
-                        + "Key4: Value4\n"
-                        + "# Value4.1\n"
-                        + "# Value4.2\n"
-                        + "#Key5: Value5\n";
+        final String input = """
+                        Key1: Value1
+                        Key2: Value2
+                         Value2.1
+                        # Value2.2
+                        #Key3: Value3comment
+                        Key3: Value3
+                        # Value3.1
+                         Value3.2
+                        Key4: Value4
+                        # Value4.1
+                        # Value4.2
+                        #Key5: Value5
+                        """;
 
         final InputStream ins = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
         final ControlFile controlFile = ControlFile.parse(ins);
@@ -85,10 +87,11 @@ public class ControlFileTest {
 
     @Test
     public void testParseWithEmptyLines() {
-        final String input =
-                "Key1: Value1\n"
-                        + "Key2: Value2\n"
-                        + "\n";
+        final String input = """
+                        Key1: Value1
+                        Key2: Value2
+
+                        """;
 
         final InputStream ins = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
         final ControlFile controlFile = ControlFile.parse(ins);
@@ -99,9 +102,10 @@ public class ControlFileTest {
 
     @Test
     public void testParseWithBadField() {
-        final String input =
-                "Key1 Value1\n"
-                        + "Key2: Value2\n";
+        final String input = """
+                        Key1 Value1
+                        Key2: Value2
+                        """;
 
         final InputStream ins = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
         assertThatExceptionOfType(GradleException.class).isThrownBy(() -> ControlFile.parse(ins));

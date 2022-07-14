@@ -540,7 +540,7 @@ public class DebTask extends DefaultTask {
 
     /**
      * Converts the specified object to a string. If the object is a {@link Supplier} or {@link Callable}, it will
-     * be called and the return value will be converted to a string, if not {@code null}. Otherwise the object's
+     * be called and the return value will be converted to a string, if not {@code null}. Otherwise, the object's
      * {@link #toString()} method will be called.
      *
      * @param obj  Object to convert to a string.

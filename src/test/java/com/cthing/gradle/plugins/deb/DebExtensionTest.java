@@ -34,15 +34,15 @@ public class DebExtensionTest {
 
     @Test
     public void testDefaults() {
-        assertThat(extension.getAdditionalVariables().get()).hasSize(0);
-        assertThat(extension.getLintianTags().get()).hasSize(0);
-        assertThat(extension.getLintianEnable().get()).isTrue();
+        assertThat(this.extension.getAdditionalVariables().get()).hasSize(0);
+        assertThat(this.extension.getLintianTags().get()).hasSize(0);
+        assertThat(this.extension.getLintianEnable().get()).isTrue();
     }
 
     @Test
     public void testAddVariable() {
         this.extension.additionalVariable("var1", "val1");
-        assertThat(extension.getAdditionalVariables().get()).containsOnly(entry("var1", "val1"));
+        assertThat(this.extension.getAdditionalVariables().get()).containsOnly(entry("var1", "val1"));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class DebExtensionTest {
                 "var2", "val2"
         );
         this.extension.additionalVariables(vars);
-        assertThat(extension.getAdditionalVariables().get()).containsOnly(
+        assertThat(this.extension.getAdditionalVariables().get()).containsOnly(
                 entry("var1", "val1"),
                 entry("var2", "val2")
         );
