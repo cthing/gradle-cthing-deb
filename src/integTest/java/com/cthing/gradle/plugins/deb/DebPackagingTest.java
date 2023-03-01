@@ -19,12 +19,11 @@ import com.cthing.gradle.plugins.test.BuildOutcome;
 import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import static com.cthing.gradle.plugins.test.PluginTestUtils.assertThat;
 import static com.cthing.gradle.plugins.test.PluginTestUtils.copyResources;
 import static com.cthing.gradle.plugins.test.PluginTestUtils.runBuild;
-
-import static org.assertj.core.api.Assertions.fail;
 
 
 public class DebPackagingTest {

@@ -1,14 +1,14 @@
 [versions]
-junit = "5.9.0"
+junit = "5.9.2"
 
 [plugins]
 pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.2.0-+"}
 dependencyAnalysis = { id = "com.cthing.dependency-analysis", version = "0.2.0-+"}
 
 [libraries]
-assertJ = "org.assertj:assertj-core:3.23.1"
+assertJ = "org.assertj:assertj-core:3.24.2"
 corePlugins = "com.cthing:gradle-core:0.2.0-+"
-freemarker = "org.freemarker:freemarker:2.3.31"
+freemarker = "org.freemarker:freemarker:2.3.32"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 projectInfo = "org.cthing:projectinfo:2.0.0-+"
