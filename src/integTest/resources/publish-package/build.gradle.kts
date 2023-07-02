@@ -7,11 +7,10 @@ apply {
 }
 
 configure<DebExtension> {
-    additionalVariables.set(mapOf("architecture" to "all"))
-    repositoryUrl.set(String.format("file://%s/aptrepo", buildDir))
+    additionalVariables = mapOf("architecture" to "all")
+    repositoryUrl = String.format("file://%s/aptrepo", buildDir)
 }
 
 val debTask = tasks.create("generateDeb", DebTask::class.java) {
-    debianDir.set(file("debian"))
+    debianDir = file("debian")
 }
-

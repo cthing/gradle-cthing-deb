@@ -6,7 +6,7 @@ apply {
 }
 
 val debTask = tasks.create("generateDeb", DebTask::class.java) {
-    debianDir.set(file("debian"))
+    debianDir = file("debian")
     lintianTags(setOf("python-script-but-no-python-dep", "wrong-path-for-interpreter"))
 }
 
