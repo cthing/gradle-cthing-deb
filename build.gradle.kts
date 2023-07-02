@@ -7,8 +7,8 @@ plugins {
 }
 
 projectInfo {
-    description.set("Plugin for creating DEB packages.")
-    projectUrl.set("https://github.com/cthing/gradle-deb/")
+    description = "Plugin for creating DEB packages."
+    projectUrl = "https://github.com/cthing/gradle-deb/"
 }
 
 gradlePlugin {
@@ -27,4 +27,5 @@ dependencies {
     testImplementation(libs.assertJ)
 
     testRuntimeOnly(libs.junitEngine)
+    testRuntimeOnly(libs.junitLauncher)
 }
