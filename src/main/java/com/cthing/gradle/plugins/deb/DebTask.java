@@ -87,7 +87,7 @@ public class DebTask extends DefaultTask {
         final Project project = getProject();
         final Provider<File> defaultDestDir = project.getExtensions().getByType(BasePluginExtension.class)
                                                           .getDistsDirectory().getAsFile();
-        final File defaultWorkingDir = new File(project.getBuildDir(), "debian-build/" + getName());
+        final File defaultWorkingDir = GradleInterop.resolveToBuildDir(project, "debian-build/" + getName());
 
         final ObjectFactory objects = project.getObjects();
         this.debianDir = objects.property(File.class);
@@ -451,7 +451,7 @@ public class DebTask extends DefaultTask {
         variables.put("project_commit", version.getCommit());
         variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
         variables.put("project_dir", project.getProjectDir().getAbsolutePath());
-        variables.put("project_build_dir", project.getBuildDir().getAbsolutePath());
+        variables.put("project_build_dir", GradleInterop.getBuildDir(project).getAbsolutePath());
 
         final ProjectInfoExtension info = (ProjectInfoExtension)project.getExtensions().findByName("projectInfo");
         variables.put("project_organization", (info == null) ? this.organization.get() : info.getOrganization().getOrElse(""));
