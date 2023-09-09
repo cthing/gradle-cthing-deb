@@ -49,7 +49,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
 import com.cthing.gradle.plugins.core.ProjectInfoExtension;
-import com.cthing.gradle.plugins.core.SemanticVersion;
+import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.util.FileUtils;
 import com.cthing.gradle.plugins.util.GradleInterop;
 
@@ -436,8 +436,8 @@ public class DebTask extends DefaultTask {
     Map<String, Object> createTemplateVariables() {
         final Project project = getProject();
         final Object projectVersion = project.getVersion();
-        final SemanticVersion version = (projectVersion instanceof SemanticVersion)
-                                        ? (SemanticVersion)projectVersion : SemanticVersion.NO_VERSION;
+        final ProjectVersion version = (projectVersion instanceof ProjectVersion)
+                                        ? (ProjectVersion)projectVersion : ProjectVersion.NO_VERSION;
         final Map<String, Object> variables = new HashMap<>();
         variables.put("project_group", project.getGroup().toString());
         variables.put("project_name", project.getName());
@@ -497,10 +497,10 @@ public class DebTask extends DefaultTask {
     /**
      * Obtains the build date in the format required by the Debian changelog file.
      *
-     * @param version Semantic version
+     * @param version Project version
      * @return Build date formatted in accordance with the Debian changelog file requirements.
      */
-    static String getChangelogDate(final SemanticVersion version) {
+    static String getChangelogDate(final ProjectVersion version) {
         final DateFormat changelogDateFormat = new SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss Z");
         return changelogDateFormat.format(new Date(version.getBuildDateMillis()));
     }
@@ -508,10 +508,10 @@ public class DebTask extends DefaultTask {
     /**
      * Obtains the year in which the build occurred.
      *
-     * @param version Semantic version
+     * @param version Project version
      * @return Year in which the build occurred
      */
-    private static String getBuildYear(final SemanticVersion version) {
+    private static String getBuildYear(final ProjectVersion version) {
         final DateFormat currentYearFormat = new SimpleDateFormat("yyyy");
         return currentYearFormat.format(new Date(version.getBuildDateMillis()));
     }

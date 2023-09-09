@@ -14,7 +14,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 
-import com.cthing.gradle.plugins.core.SemanticVersion;
+import com.cthing.gradle.plugins.core.ProjectVersion;
 
 import static com.cthing.gradle.plugins.util.GradleInterop.getProperty;
 
@@ -44,8 +44,8 @@ public class DebExtension {
 
         final Provider<String> defaultRepositoryUrl = project.provider(() -> {
             final Object projectVersion = project.getVersion();
-            final boolean releaseBuild = (projectVersion instanceof SemanticVersion)
-                    && ((SemanticVersion)projectVersion).isReleaseBuild();
+            final boolean releaseBuild = (projectVersion instanceof ProjectVersion)
+                    && ((ProjectVersion)projectVersion).isReleaseBuild();
             final String repositoryUrlProperty = releaseBuild ? CANDIDATE_REPO_PROPERTY : SNAPSHOT_REPO_PROPERTY;
             return getProperty(project, repositoryUrlProperty, null);
         });

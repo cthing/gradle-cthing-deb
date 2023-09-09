@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 import com.cthing.gradle.plugins.core.BuildType;
-import com.cthing.gradle.plugins.core.SemanticVersion;
+import com.cthing.gradle.plugins.core.ProjectVersion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,7 +21,7 @@ public class DebTaskTest {
     @Test
     public void testGetChangelogDate() {
         final Date date = new Date(1638042324837L);
-        final SemanticVersion version = new SemanticVersion("1.2.3", BuildType.release, date);
+        final ProjectVersion version = new ProjectVersion("1.2.3", BuildType.release, date);
         assertThat(version.getBuildDate()).isEqualTo("2021-11-27T19:45:24Z");
         assertThat(DebTask.getChangelogDate(version)).isEqualTo("Sat, 27 Nov 2021 11:45:24 -0800");
     }

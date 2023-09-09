@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.cthing.gradle.plugins.core.SemanticVersion;
+import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.test.GradleProjectAssert;
 import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
 import com.cthing.gradle.plugins.util.GradleInterop;
@@ -55,7 +55,7 @@ public class DebPluginTest {
 
     @Test
     public void testTemplateVariables() {
-        final SemanticVersion version = (SemanticVersion)this.project.getVersion();
+        final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Map<String, Object> variables = task.createTemplateVariables();
         assertThat(variables).isNotNull();
@@ -80,7 +80,7 @@ public class DebPluginTest {
 
     @Test
     public void testEnvironmentVariables() {
-        final SemanticVersion version = (SemanticVersion)this.project.getVersion();
+        final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Map<String, Object> variables = task.createEnvironmentVariables("foobar");
         assertThat(variables).isNotNull();
