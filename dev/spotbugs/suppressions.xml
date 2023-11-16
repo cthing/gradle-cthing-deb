@@ -1,5 +1,9 @@
 <FindBugsFilter>
     <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+        <Class name="~.*DebTask"/>
+    </Match>
+    <Match>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
