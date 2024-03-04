@@ -3,7 +3,6 @@ apply(from = File(gradle.gradleUserHomeDir, "cthing-repositories.gradle.kts"))
 plugins {
     java
     alias(libs.plugins.pluginProject)
-    alias(libs.plugins.dependencyAnalysis)
 }
 
 projectInfo {

@@ -3,7 +3,6 @@ junit = "5.10.2"
 
 [plugins]
 pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.3.0-+"}
-dependencyAnalysis = { id = "com.cthing.dependency-analysis", version = "0.3.0-+"}
 
 [libraries]
 assertJ = "org.assertj:assertj-core:3.25.3"
