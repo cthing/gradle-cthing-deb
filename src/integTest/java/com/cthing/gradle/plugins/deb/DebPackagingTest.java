@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.cthing.gradle.plugins.test.BuildOutcome;
 import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
-import com.cthing.gradle.plugins.util.GradleInterop;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -38,7 +37,8 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
 
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
@@ -51,7 +51,7 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
 
-        final File repoDir = GradleInterop.resolveToBuildDir(project, "distributions");
+        final File repoDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(), "distributions");
         assertThat(repoDir).isDirectoryContaining("regex:.*test-package_0\\.1\\.0-\\d+\\_all\\.deb");
     }
 
@@ -61,7 +61,8 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
 
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
@@ -74,7 +75,8 @@ public class DebPackagingTest {
         copyResources(project, "with-systemd");
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
@@ -87,7 +89,8 @@ public class DebPackagingTest {
         copyResources(project, "with-scripts-systemd");
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
@@ -101,7 +104,7 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "publish");
         assertThat(outcome).isSuccess();
 
-        final File repoDir = GradleInterop.resolveToBuildDir(project, "aptrepo");
+        final File repoDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(), "aptrepo");
         assertThat(repoDir).isDirectoryContaining("regex:.*test-package_\\d+\\.\\d+\\.\\d+-\\d+_all\\.deb");
     }
 
@@ -111,7 +114,8 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
 
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");
@@ -124,7 +128,8 @@ public class DebPackagingTest {
         final BuildOutcome outcome = runBuild(project, "generateDeb");
         assertThat(outcome).isSuccess();
 
-        final File packageFile = GradleInterop.resolveToBuildDir(project, "distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                          "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");

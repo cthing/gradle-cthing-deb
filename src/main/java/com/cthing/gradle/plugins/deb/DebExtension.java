@@ -16,8 +16,6 @@ import org.gradle.api.provider.SetProperty;
 
 import com.cthing.gradle.plugins.core.ProjectVersion;
 
-import static com.cthing.gradle.plugins.util.GradleInterop.getProperty;
-
 
 /**
  * Global configuration parameters for the Debian packaging task.
@@ -47,14 +45,14 @@ public class DebExtension {
             final boolean releaseBuild = (projectVersion instanceof ProjectVersion)
                     && ((ProjectVersion)projectVersion).isReleaseBuild();
             final String repositoryUrlProperty = releaseBuild ? CANDIDATE_REPO_PROPERTY : SNAPSHOT_REPO_PROPERTY;
-            return getProperty(project, repositoryUrlProperty, null);
+            return (String)project.findProperty(repositoryUrlProperty);
         });
         this.repositoryUrl = objects.property(String.class).convention(defaultRepositoryUrl);
 
-        final String defaultUsername = getProperty(project, USERNAME_PROPERTY, null);
+        final String defaultUsername = (String)project.findProperty(USERNAME_PROPERTY);
         this.repositoryUsername = objects.property(String.class).convention(defaultUsername);
 
-        final String defaultPassword = getProperty(project, PASSWORD_PROPERTY, null);
+        final String defaultPassword = (String)project.findProperty(PASSWORD_PROPERTY);
         this.repositoryPassword = objects.property(String.class).convention(defaultPassword);
     }
 

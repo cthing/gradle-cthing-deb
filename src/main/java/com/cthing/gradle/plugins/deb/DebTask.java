@@ -45,13 +45,13 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
 import com.cthing.gradle.plugins.core.ProjectInfoExtension;
 import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.util.FileUtils;
-import com.cthing.gradle.plugins.util.GradleInterop;
 
 import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Template;
@@ -87,7 +87,8 @@ public class DebTask extends DefaultTask {
         final Project project = getProject();
         final Provider<File> defaultDestDir = project.getExtensions().getByType(BasePluginExtension.class)
                                                           .getDistsDirectory().getAsFile();
-        final File defaultWorkingDir = GradleInterop.resolveToBuildDir(project, "debian-build/" + getName());
+        final File defaultWorkingDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+                                                "debian-build/" + getName());
 
         final ObjectFactory objects = project.getObjects();
         this.debianDir = objects.property(File.class);
@@ -451,7 +452,7 @@ public class DebTask extends DefaultTask {
         variables.put("project_commit", version.getCommit());
         variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
         variables.put("project_dir", project.getProjectDir().getAbsolutePath());
-        variables.put("project_build_dir", GradleInterop.getBuildDir(project).getAbsolutePath());
+        variables.put("project_build_dir", project.getLayout().getBuildDirectory().get().getAsFile().getAbsolutePath());
 
         final ProjectInfoExtension info = (ProjectInfoExtension)project.getExtensions().findByName("projectInfo");
         variables.put("project_organization", (info == null) ? this.organization.get() : info.getOrganization().getOrElse(""));
@@ -459,8 +460,8 @@ public class DebTask extends DefaultTask {
 
         final JavaPluginExtension javaExtension = project.getExtensions().findByType(JavaPluginExtension.class);
         if (javaExtension != null) {
-            GradleInterop.getSourceSets(project)
-                         .forEach(sourceSet -> {
+            project.getExtensions().getByType(SourceSetContainer.class)
+                   .forEach(sourceSet -> {
                              final File resourcesDir = sourceSet.getOutput().getResourcesDir();
                              if (resourcesDir != null) {
                                  variables.put(String.format("project_%s_resources_dir", sourceSet.getName()),

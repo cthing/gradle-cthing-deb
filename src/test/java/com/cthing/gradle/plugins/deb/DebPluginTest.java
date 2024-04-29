@@ -4,6 +4,7 @@
  */
 package com.cthing.gradle.plugins.deb;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.test.GradleProjectAssert;
 import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
-import com.cthing.gradle.plugins.util.GradleInterop;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,10 +30,12 @@ public class DebPluginTest {
                                                                                  "com.cthing.deb",
                                                                                  "java");
     private Project project;
+    private File buildDir;
 
     @BeforeEach
     public void setUp(final Project project) {
         this.project = project;
+        this.buildDir = project.getLayout().getBuildDirectory().get().getAsFile();
     }
 
     @Test
@@ -46,10 +48,8 @@ public class DebPluginTest {
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         assertThat(task).isNotNull();
         assertThat(task.getDebianDir().isPresent()).isFalse();
-        assertThat(task.getDestinationDir().get()).isEqualTo(GradleInterop.resolveToBuildDir(this.project,
-                                                                                             "distributions"));
-        assertThat(task.getWorkingDir().get()).isEqualTo(GradleInterop.resolveToBuildDir(this.project,
-                                                                                         "debian-build/generateDeb"));
+        assertThat(task.getDestinationDir().get()).isEqualTo(new File(this.buildDir, "distributions"));
+        assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.buildDir, "debian-build/generateDeb"));
         assertThat(task.getAdditionalVariables().get()).isEmpty();
     }
 
@@ -71,11 +71,10 @@ public class DebPluginTest {
         assertThat(variables.get("project_commit")).isNotNull();
         assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
         assertThat(variables).containsEntry("project_root_dir", this.project.getRootDir().getAbsolutePath());
-        assertThat(variables).containsEntry("project_build_dir",
-                                            GradleInterop.getBuildDir(this.project).getAbsolutePath());
+        assertThat(variables).containsEntry("project_build_dir", this.buildDir.getAbsolutePath());
         assertThat(variables).containsEntry("project_organization", "C Thing Software");
         assertThat(variables).containsEntry("project_main_resources_dir",
-                                            GradleInterop.resolveToBuildDir(this.project, "resources/main").getAbsolutePath());
+                                            new File(this.buildDir, "resources/main").getAbsolutePath());
     }
 
     @Test
@@ -96,17 +95,17 @@ public class DebPluginTest {
         assertThat(variables.get("PROJECT_COMMIT")).isNotNull();
         assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_ROOT_DIR", this.project.getRootDir().getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_BUILD_DIR", GradleInterop.getBuildDir(this.project).getAbsolutePath());
+        assertThat(variables).containsEntry("PROJECT_BUILD_DIR", this.buildDir.getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_ORGANIZATION", "C Thing Software");
         assertThat(variables).containsEntry("PROJECT_MAIN_RESOURCES_DIR",
-                                            GradleInterop.resolveToBuildDir(this.project, "resources/main").getAbsolutePath());
+                                            new File(this.buildDir, "resources/main").getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_PACKAGE_NAME", "foobar");
         assertThat(variables).containsEntry("PROJECT_DEBIAN_DIR", "debian/foobar");
     }
 
     @Test
     public void testAdditionalVariables() {
-        final DebExtension extension = GradleInterop.getExtension(this.project, DebExtension.class);
+        final DebExtension extension = this.project.getExtensions().getByType(DebExtension.class);
         extension.additionalVariable("em1", "ev1");
         extension.additionalVariable("m1", "v0");
 
@@ -135,7 +134,7 @@ public class DebPluginTest {
 
     @Test
     public void testExtensionLintianTagsAdditionalTags() {
-        final DebExtension extension = GradleInterop.getExtension(this.project, DebExtension.class);
+        final DebExtension extension = this.project.getExtensions().getByType(DebExtension.class);
         extension.lintianTag("tag1");
         extension.lintianTag("tag2");
         extension.lintianTags(Set.of("tag3", "tag4"));
