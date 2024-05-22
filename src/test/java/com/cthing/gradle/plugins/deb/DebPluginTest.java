@@ -62,7 +62,7 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("project_group", this.project.getGroup());
         assertThat(variables).containsEntry("project_name", this.project.getName());
         assertThat(variables).containsEntry("project_version", version.toString());
-        assertThat(variables).containsEntry("project_semantic_version", version.getSemanticVersion());
+        assertThat(variables).containsEntry("project_semantic_version", version.getCoreVersion());
         assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
         assertThat((String)variables.get("project_build_date")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
         assertThat((String)variables.get("project_build_year")).matches("\\d{4}");
@@ -86,7 +86,7 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("PROJECT_GROUP", this.project.getGroup());
         assertThat(variables).containsEntry("PROJECT_NAME", this.project.getName());
         assertThat(variables).containsEntry("PROJECT_VERSION", version.toString());
-        assertThat(variables).containsEntry("PROJECT_SEMANTIC_VERSION", version.getSemanticVersion());
+        assertThat(variables).containsEntry("PROJECT_SEMANTIC_VERSION", version.getCoreVersion());
         assertThat(variables).containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber());
         assertThat((String)variables.get("PROJECT_BUILD_DATE")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
         assertThat((String)variables.get("PROJECT_BUILD_YEAR")).matches("\\d{4}");

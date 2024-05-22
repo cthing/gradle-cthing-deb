@@ -443,7 +443,7 @@ public class DebTask extends DefaultTask {
         variables.put("project_group", project.getGroup().toString());
         variables.put("project_name", project.getName());
         variables.put("project_version", version.toString());
-        variables.put("project_semantic_version", version.getSemanticVersion());
+        variables.put("project_semantic_version", version.getCoreVersion());
         variables.put("project_build_number", version.getBuildNumber());
         variables.put("project_build_date", version.getBuildDate());
         variables.put("project_build_year", getBuildYear(version));
