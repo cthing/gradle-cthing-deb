@@ -19,6 +19,7 @@ gradlePlugin {
 
 dependencies {
     implementation(libs.corePlugins)
+    implementation(libs.cthingProjectVersion)
     implementation(libs.freemarker)
     implementation(libs.projectInfo)
 

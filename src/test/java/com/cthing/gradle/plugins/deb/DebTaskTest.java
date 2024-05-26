@@ -8,10 +8,9 @@ import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import org.cthing.projectversion.BuildType;
+import org.cthing.projectversion.ProjectVersion;
 import org.junit.jupiter.api.Test;
-
-import com.cthing.gradle.plugins.core.BuildType;
-import com.cthing.gradle.plugins.core.ProjectVersion;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

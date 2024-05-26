@@ -7,14 +7,13 @@ package com.cthing.gradle.plugins.deb;
 import java.util.Map;
 import java.util.Set;
 
+import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
-
-import com.cthing.gradle.plugins.core.ProjectVersion;
 
 
 /**

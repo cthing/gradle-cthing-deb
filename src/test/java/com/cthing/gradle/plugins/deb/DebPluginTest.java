@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.test.GradleProjectAssert;
 import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
 

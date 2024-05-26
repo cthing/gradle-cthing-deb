@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.cthing.projectinfo.License;
+import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -50,7 +51,6 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
 import com.cthing.gradle.plugins.core.ProjectInfoExtension;
-import com.cthing.gradle.plugins.core.ProjectVersion;
 import com.cthing.gradle.plugins.util.FileUtils;
 
 import freemarker.cache.FileTemplateLoader;
