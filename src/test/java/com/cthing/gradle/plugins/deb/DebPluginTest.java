@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.cthing.projectversion.BuildType;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ public class DebPluginTest {
     @BeforeEach
     public void setUp(final Project project) {
         this.project = project;
+        this.project.setVersion(new ProjectVersion("1.2.3", BuildType.snapshot));
         this.buildDir = project.getLayout().getBuildDirectory().get().getAsFile();
     }
 
