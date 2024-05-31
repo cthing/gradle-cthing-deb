@@ -27,7 +27,6 @@ public class DebPluginTest {
     @RegisterExtension
     @SuppressWarnings("unused")
     public final GradleTestProjectExtension ext = new GradleTestProjectExtension("project",
-                                                                                 "com.cthing.versioning",
                                                                                  "com.cthing.deb",
                                                                                  "java");
     private Project project;
