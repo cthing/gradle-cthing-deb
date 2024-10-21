@@ -43,6 +43,7 @@ public class DebPublishTask extends DefaultTask {
     private final Property<String> repositoryUsername;
     private final Property<String> repositoryPassword;
 
+    @SuppressWarnings("this-escape")
     public DebPublishTask() {
         setDescription("Publish DEB packages to an APT repository");
         setGroup("Publishing");

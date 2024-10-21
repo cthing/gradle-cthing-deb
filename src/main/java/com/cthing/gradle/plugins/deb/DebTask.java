@@ -80,6 +80,7 @@ public class DebTask extends DefaultTask {
     private final SetProperty<String> lintianTags;
     private final Property<Boolean> lintianEnable;
 
+    @SuppressWarnings("this-escape")
     public DebTask() {
         setDescription("Create a Debian package");
         setGroup("Packaging");
