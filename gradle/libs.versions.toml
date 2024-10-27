@@ -7,7 +7,7 @@ pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.3.0-+"}
 [libraries]
 assertJ = "org.assertj:assertj-core:3.26.3"
 corePlugins = "com.cthing:gradle-core:0.3.0-+"
-cthingProjectVersion = "org.cthing:cthing-projectversion:1.0.0"
+cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 freemarker = "org.freemarker:freemarker:2.3.33"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
