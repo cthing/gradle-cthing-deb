@@ -58,16 +58,16 @@ public class DebPluginTest {
     public void testTemplateVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, Object> variables = task.createTemplateVariables();
+        final Map<String, String> variables = task.createTemplateVariables();
         assertThat(variables).isNotNull();
-        assertThat(variables).containsEntry("project_group", this.project.getGroup());
+        assertThat(variables).containsEntry("project_group", this.project.getGroup().toString());
         assertThat(variables).containsEntry("project_name", this.project.getName());
         assertThat(variables).containsEntry("project_version", version.toString());
         assertThat(variables).containsEntry("project_semantic_version", version.getCoreVersion());
         assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
-        assertThat((String)variables.get("project_build_date")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
-        assertThat((String)variables.get("project_build_year")).matches("\\d{4}");
-        assertThat((String)variables.get("project_changelog_date")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
+        assertThat(variables.get("project_build_date")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
+        assertThat(variables.get("project_build_year")).matches("\\d{4}");
+        assertThat(variables.get("project_changelog_date")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
         assertThat(variables.get("project_branch")).isNotNull();
         assertThat(variables.get("project_commit")).isNotNull();
         assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
@@ -82,16 +82,16 @@ public class DebPluginTest {
     public void testEnvironmentVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, Object> variables = task.createEnvironmentVariables("foobar");
+        final Map<String, String> variables = task.createEnvironmentVariables("foobar");
         assertThat(variables).isNotNull();
-        assertThat(variables).containsEntry("PROJECT_GROUP", this.project.getGroup());
+        assertThat(variables).containsEntry("PROJECT_GROUP", this.project.getGroup().toString());
         assertThat(variables).containsEntry("PROJECT_NAME", this.project.getName());
         assertThat(variables).containsEntry("PROJECT_VERSION", version.toString());
         assertThat(variables).containsEntry("PROJECT_SEMANTIC_VERSION", version.getCoreVersion());
         assertThat(variables).containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber());
-        assertThat((String)variables.get("PROJECT_BUILD_DATE")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
-        assertThat((String)variables.get("PROJECT_BUILD_YEAR")).matches("\\d{4}");
-        assertThat((String)variables.get("PROJECT_CHANGELOG_DATE")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
+        assertThat(variables.get("PROJECT_BUILD_DATE")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
+        assertThat(variables.get("PROJECT_BUILD_YEAR")).matches("\\d{4}");
+        assertThat(variables.get("PROJECT_CHANGELOG_DATE")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
         assertThat(variables.get("PROJECT_BRANCH")).isNotNull();
         assertThat(variables.get("PROJECT_COMMIT")).isNotNull();
         assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
@@ -115,7 +115,7 @@ public class DebPluginTest {
         task.additionalVariable("m1", "v1");
         task.additionalVariables(Map.of("m2", "v2", "m3", proc));
 
-        final Map<String, Object> variables = task.createTemplateVariables();
+        final Map<String, String> variables = task.createTemplateVariables();
         assertThat(variables).containsEntry("em1", "ev1");
         assertThat(variables).containsEntry("m1", "v1");
         assertThat(variables).containsEntry("m2", "v2");

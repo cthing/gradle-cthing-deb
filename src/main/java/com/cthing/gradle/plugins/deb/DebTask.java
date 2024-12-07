@@ -268,16 +268,19 @@ public class DebTask extends DefaultTask {
             dpkgBuildArgs.add(DPKG_GENCONTROL_TOOL);
             dpkgBuildArgs.add("-ObinaryControl");
 
-            LOGGER.info(String.format("Running %s in  %s", DPKG_GENCONTROL_TOOL, tempDir));
-            getProject().exec(es -> {
-                es.commandLine(dpkgBuildArgs);
-                es.workingDir(tempDir);
-                es.setErrorOutput(System.out);
-            });
+            LOGGER.info("Running {} in {}", DPKG_GENCONTROL_TOOL, tempDir);
+            final ProcessBuilder processBuilder = new ProcessBuilder(dpkgBuildArgs);
+            processBuilder.directory(tempDir);
+            final Process process = processBuilder.start();
+            final String errorOutput = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int status = process.waitFor();
+            if (status != 0) {
+                throw new IOException(errorOutput);
+            }
 
             final ControlFile controlFile = parseControlFile(tempDir.toPath().resolve("binaryControl"));
             artifacts.add(new File(this.destinationDir.get(), controlFile.getPackageFilename()));
-        } catch (final IOException ex) {
+        } catch (final IOException | InterruptedException ex) {
             throw new TaskExecutionException(this, ex);
         }
 
@@ -344,7 +347,7 @@ public class DebTask extends DefaultTask {
     }
 
     private void processConfigFiles(final File srcDebianDir, final File dstDebianDir, final String... confFilenames) {
-        final Map<String, Object> variables = createTemplateVariables();
+        final Map<String, String> variables = createTemplateVariables();
 
         for (final String confFilename : confFilenames) {
             final File srcConfFile = new File(srcDebianDir, confFilename);
@@ -377,13 +380,23 @@ public class DebTask extends DefaultTask {
         dpkgBuildArgs.add("--build=binary");
         dpkgBuildArgs.add("--no-sign");
 
-        LOGGER.info(String.format("Running %s in  %s", DPKG_BUILDPACKAGE_TOOL, wdir));
-        getProject().exec(es -> {
-            es.commandLine(dpkgBuildArgs);
-            es.environment(createEnvironmentVariables(packageName));
-            es.workingDir(wdir);
-            es.setErrorOutput(System.out);
-        });
+        LOGGER.info("Running {} in  {}", DPKG_BUILDPACKAGE_TOOL, wdir);
+        final ProcessBuilder processBuilder = new ProcessBuilder(dpkgBuildArgs);
+        processBuilder.directory(wdir);
+        processBuilder.environment().putAll(createEnvironmentVariables(packageName));
+        try {
+            final Process process = processBuilder.start();
+            final String errorOutput = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int status = process.waitFor();
+            if (status != 0) {
+                throw new IOException(errorOutput);
+            }
+        } catch (final IOException | InterruptedException ex) {
+            throw new TaskExecutionException(this, ex);
+        }
+
+
+
 
         final ControlFile controlFile = parseBinaryControlFile(dstDebianDir, packageName);
         final File packageFile = new File(wdir.getParentFile(), controlFile.getPackageFilename());
@@ -423,11 +436,18 @@ public class DebTask extends DefaultTask {
         });
         lintianArgs.add(packageFile.getPath());
 
-        LOGGER.info(String.format("Running %s on package file %s", LINTIAN_TOOL, packageFile));
-        getProject().exec(es -> {
-            es.commandLine(lintianArgs);
-            es.setErrorOutput(System.out);
-        });
+        LOGGER.info("Running {} on package file {}", LINTIAN_TOOL, packageFile);
+        final ProcessBuilder processBuilder = new ProcessBuilder(lintianArgs);
+        try {
+            final Process process = processBuilder.start();
+            final String errorOutput = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int status = process.waitFor();
+            if (status != 0) {
+                throw new IOException(errorOutput);
+            }
+        } catch (final IOException | InterruptedException ex) {
+            throw new TaskExecutionException(this, ex);
+        }
     }
 
     /**
@@ -435,12 +455,12 @@ public class DebTask extends DefaultTask {
      *
      * @return Map of variable names to their values.
      */
-    Map<String, Object> createTemplateVariables() {
+    Map<String, String> createTemplateVariables() {
         final Project project = getProject();
         final Object projectVersion = project.getVersion();
         final ProjectVersion version = (projectVersion instanceof ProjectVersion)
                                         ? (ProjectVersion)projectVersion : ProjectVersion.NO_VERSION;
-        final Map<String, Object> variables = new HashMap<>();
+        final Map<String, String> variables = new HashMap<>();
         variables.put("project_group", project.getGroup().toString());
         variables.put("project_name", project.getName());
         variables.put("project_version", version.toString());
@@ -487,8 +507,8 @@ public class DebTask extends DefaultTask {
      * @param packageName Name of the package from the control file
      * @return Map of environment variable names to their values.
      */
-    Map<String, Object> createEnvironmentVariables(final String packageName) {
-        final Map<String, Object> templateVariables = createTemplateVariables();
+    Map<String, String> createEnvironmentVariables(final String packageName) {
+        final Map<String, String> templateVariables = createTemplateVariables();
         templateVariables.put("PROJECT_PACKAGE_NAME", packageName);
         templateVariables.put("PROJECT_DEBIAN_DIR", "debian/" + packageName);
         return templateVariables.entrySet()

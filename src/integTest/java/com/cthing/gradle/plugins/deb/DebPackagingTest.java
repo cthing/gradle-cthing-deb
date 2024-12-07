@@ -4,7 +4,6 @@
  */
 package com.cthing.gradle.plugins.deb;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +40,7 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
     }
 
@@ -65,7 +64,7 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
                                                                       "./postrm", "./preinst", "./prerm");
     }
@@ -79,7 +78,7 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
                                                                       "./postrm", "./prerm");
     }
@@ -93,7 +92,7 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums", "./postinst",
                                                                       "./postrm", "./prerm");
     }
@@ -118,7 +117,7 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");
+        assertThat(readPackageData(packageFile)).contains("./usr/lib/SampleFile.py");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
     }
 
@@ -132,25 +131,28 @@ public class DebPackagingTest {
                                           "distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
-        assertThat(readPackageData(project, packageFile)).contains("./usr/lib/SampleFile.py");
+        assertThat(readPackageData(packageFile)).contains("./usr/lib/SampleFile.py");
         assertThat(readPackageControl(project, packageFile)).contains("./control", "./md5sums");
     }
 
-    private Set<String> readPackageData(final Project project, final File packageFile) {
+    private Set<String> readPackageData(final File packageFile) {
         final Set<String> files = new HashSet<>();
 
-        try (ByteArrayOutputStream outs = new ByteArrayOutputStream()) {
-            project.exec(es -> {
-                es.setStandardOutput(outs);
-                es.commandLine("/usr/bin/dpkg-deb", "-c", packageFile);
-            });
+        try {
+            final ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/dpkg-deb", "-c", packageFile.toString());
+            final Process process = processBuilder.start();
+            final String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            final String error = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int status = process.waitFor();
+            if (status != 0) {
+                throw new IOException(error);
+            }
 
-            final String output = outs.toString(StandardCharsets.UTF_8);
             output.lines().forEach(line -> {
                 final String[] fields = line.split("\\s+");
                 files.add(fields[5]);
             });
-        } catch (final IOException ex) {
+        } catch (final IOException | InterruptedException ex) {
             fail("Could not obtain package data", ex);
         }
 
@@ -160,16 +162,19 @@ public class DebPackagingTest {
     private Set<String> readPackageControl(final Project project, final File packageFile) {
         final Set<String> files = new HashSet<>();
 
-        try (ByteArrayOutputStream outs = new ByteArrayOutputStream()) {
-            project.exec(es -> {
-                es.setStandardOutput(outs);
-                es.commandLine("/usr/bin/bash", "-c",
-                               String.format("/usr/bin/dpkg-deb --ctrl-tarfile %s | /usr/bin/tar t", packageFile));
-            });
+        try {
+            final ProcessBuilder processBuilder = new ProcessBuilder("/usr/bin/bash", "-c",
+                                                                     String.format("/usr/bin/dpkg-deb --ctrl-tarfile %s | /usr/bin/tar t", packageFile));
+            final Process process = processBuilder.start();
+            final String output = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            final String error = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+            final int status = process.waitFor();
+            if (status != 0) {
+                throw new IOException(error);
+            }
 
-            final String output = outs.toString(StandardCharsets.UTF_8);
             output.lines().forEach(files::add);
-        } catch (final IOException ex) {
+        } catch (final IOException | InterruptedException ex) {
             fail("Could not obtain package control", ex);
         }
 
