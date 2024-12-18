@@ -13,6 +13,9 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.function.Consumer;
 
@@ -24,8 +27,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
-
-import com.cthing.gradle.plugins.util.FileUtils;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -84,8 +85,8 @@ public class DebPublishTask extends DefaultTask {
             try {
                 final URI repoUri = new URI(repoUrl.endsWith("/") ? repoUrl : (repoUrl + "/"));
                 final Consumer<File> publishProc = "file".equals(repoUri.getScheme())
-                                                   ? artifact -> publishLocal(artifact, repoUri)
-                                                   : artifact -> publishRemote(artifact, repoUri);
+                                                   ? artifact -> publishLocal(artifact.toPath(), repoUri)
+                                                   : artifact -> publishRemote(artifact.toPath(), repoUri);
 
                 getProject().getTasks().withType(DebTask.class, debTask -> debTask.getArtifacts().forEach(publishProc));
             } catch (final URISyntaxException ex) {
@@ -94,23 +95,27 @@ public class DebPublishTask extends DefaultTask {
         }
     }
 
-    private void publishLocal(final File file, final URI uri) {
-        getLogger().info("Publishing {} to {}", file.getName(), uri);
+    private void publishLocal(final Path file, final URI uri) {
+        getLogger().info("Publishing {} to local destination {}", file.getFileName(), uri);
 
-        final File path = new File(uri.getPath());
-        if (!path.exists() && !path.mkdirs()) {
-            throw new GradleException("Could not create directory: " + path);
+        final Path path = Path.of(uri.getPath());
+        try {
+            if (Files.notExists(path)) {
+                Files.createDirectories(path);
+            }
+            Files.copy(file, path.resolve(file.getFileName()), StandardCopyOption.REPLACE_EXISTING);
+        } catch (final IOException ex) {
+            throw new TaskExecutionException(this, ex);
         }
-        FileUtils.copyFile(file, path, true);
     }
 
-    private void publishRemote(final File file, final URI uri) {
-        getLogger().info("Publishing {} to {}", file.getName(), uri);
+    private void publishRemote(final Path file, final URI uri) {
+        getLogger().info("Publishing {} to remote destination {}", file.getFileName(), uri);
 
         try {
             final HttpRequest request = HttpRequest.newBuilder()
                                                    .uri(uri)
-                                                   .POST(HttpRequest.BodyPublishers.ofFile(file.toPath()))
+                                                   .POST(HttpRequest.BodyPublishers.ofFile(file))
                                                    .timeout(Duration.of(REPO_TIMEOUT, MINUTES))
                                                    .build();
             final PasswordAuthentication authentication =
@@ -120,6 +125,7 @@ public class DebPublishTask extends DefaultTask {
                                                             .followRedirects(HttpClient.Redirect.ALWAYS)
                                                             .authenticator(new Authenticator() {
                                                                 @Override
+                                                                @SuppressWarnings("MethodDoesntCallSuperMethod")
                                                                 protected PasswordAuthentication getPasswordAuthentication() {
                                                                     return authentication;
                                                                 }
