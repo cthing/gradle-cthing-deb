@@ -6,6 +6,7 @@ pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.3.0-+"}
 
 [libraries]
 assertJ = "org.assertj:assertj-core:3.26.3"
+commonsIO = "commons-io:commons-io:2.18.0"
 corePlugins = "com.cthing:gradle-core:0.3.0-+"
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 freemarker = "org.freemarker:freemarker:2.3.33"

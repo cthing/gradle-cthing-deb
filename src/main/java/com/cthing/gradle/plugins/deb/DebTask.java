@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FileUtils;
 import org.cthing.projectinfo.License;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.DefaultTask;
@@ -51,12 +52,13 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
 import com.cthing.gradle.plugins.core.ProjectInfoExtension;
-import com.cthing.gradle.plugins.util.FileUtils;
 
 import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
+
+import static org.apache.tools.ant.types.resources.MultiRootFileSet.SetType.file;
 
 
 /**
@@ -312,7 +314,7 @@ public class DebTask extends DefaultTask {
 
         // Start with a clean working directory.
         final File wdir = this.workingDir.get();
-        FileUtils.deleteDir(wdir);
+        FileUtils.deleteQuietly(wdir);
 
         // Create the working and configuration directories.
         final File dstDebianDir = createDebianDir(wdir);
@@ -334,14 +336,18 @@ public class DebTask extends DefaultTask {
     private File createDebianDir(final File baseDir) {
         // Create the working and configuration directories.
         final File dstDebianDir = new File(baseDir, "debian");
-        FileUtils.makeDirs(dstDebianDir);
+        try {
+            FileUtils.createParentDirectories(dstDebianDir);
 
-        // Copy the debian directory to the working directory.
-        final File srcDebianDir = this.debianDir.get();
-        FileUtils.copyDir(srcDebianDir, dstDebianDir);
+            // Copy the debian directory to the working directory.
+            final File srcDebianDir = this.debianDir.get();
+            FileUtils.copyDirectory(srcDebianDir, dstDebianDir);
 
-        // Perform variable replacement on specific configuration files.
-        processConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog");
+            // Perform variable replacement on specific configuration files.
+            processConfigFiles(srcDebianDir, dstDebianDir, "control", "copyright", "changelog");
+        } catch (final IOException ex) {
+            throw new TaskExecutionException(this, ex);
+        }
 
         return dstDebianDir;
     }

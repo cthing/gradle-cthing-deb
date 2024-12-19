@@ -23,6 +23,7 @@ gradlePlugin {
 }
 
 dependencies {
+    implementation(libs.commonsIO)
     implementation(libs.corePlugins)
     implementation(libs.cthingProjectVersion)
     implementation(libs.freemarker)
