@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 C Thing Software
+ * Copyright 2024 C Thing Software
  * All rights reserved.
  */
 package com.cthing.gradle.plugins.deb;
