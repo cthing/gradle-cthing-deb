@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.gradle.api.Project;
+import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -20,14 +18,13 @@ import static org.assertj.core.api.Assertions.entry;
 
 public class DebExtensionTest {
 
-    @RegisterExtension
-    @SuppressWarnings("unused")
-    public final GradleTestProjectExtension ext = new GradleTestProjectExtension("project", "com.cthing.deb", "java");
-
     private DebExtension extension;
 
     @BeforeEach
-    public void setup(final Project project) {
+    public void setup() {
+        final Project project = ProjectBuilder.builder().build();
+        project.getPluginManager().apply("com.cthing.deb");
+
         this.extension = new DebExtension(project);
     }
 

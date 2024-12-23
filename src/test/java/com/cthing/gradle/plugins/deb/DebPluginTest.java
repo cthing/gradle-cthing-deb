@@ -12,31 +12,27 @@ import java.util.function.Supplier;
 import org.cthing.projectversion.BuildType;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
+import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.cthing.gradle.plugins.test.GradleProjectAssert;
-import com.cthing.gradle.plugins.test.GradleTestProjectExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class DebPluginTest {
 
-    @RegisterExtension
-    @SuppressWarnings("unused")
-    public final GradleTestProjectExtension ext = new GradleTestProjectExtension("project",
-                                                                                 "com.cthing.deb",
-                                                                                 "java");
     private Project project;
     private File buildDir;
 
     @BeforeEach
-    public void setUp(final Project project) {
-        this.project = project;
+    public void setUp() {
+        this.project = ProjectBuilder.builder().withName("project").build();
+        this.project.getPluginManager().apply("com.cthing.deb");
+        this.project.getPluginManager().apply("java");
         this.project.setVersion(new ProjectVersion("1.2.3", BuildType.snapshot));
-        this.buildDir = project.getLayout().getBuildDirectory().get().getAsFile();
+        this.buildDir = this.project.getLayout().getBuildDirectory().get().getAsFile();
     }
 
     @Test
