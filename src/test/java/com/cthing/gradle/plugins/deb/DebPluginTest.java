@@ -16,9 +16,8 @@ import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.cthing.gradle.plugins.test.GradleProjectAssert;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.cthing.assertj.gradle.GradleProjectAssert.assertThat;
 
 
 public class DebPluginTest {
@@ -37,7 +36,7 @@ public class DebPluginTest {
 
     @Test
     public void testApply() {
-        GradleProjectAssert.assertThat(this.project).hasExtension("deb");
+        assertThat(this.project).hasExtension("deb");
     }
 
     @Test
@@ -102,6 +101,7 @@ public class DebPluginTest {
 
     @Test
     public void testAdditionalVariables() {
+        assertThat(this.project).hasExtensionWithType(DebExtension.class);
         final DebExtension extension = this.project.getExtensions().getByType(DebExtension.class);
         extension.additionalVariable("em1", "ev1");
         extension.additionalVariable("m1", "v0");
