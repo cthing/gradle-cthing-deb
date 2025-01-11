@@ -13,4 +13,4 @@ freemarker = "org.freemarker:freemarker:2.3.33"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitLauncher = "org.junit.platform:junit-platform-launcher:1.11.3"
-projectInfo = "org.cthing:projectinfo:3.0.0-+"
+projectInfo = "org.cthing:projectinfo:4.0.0-+"
