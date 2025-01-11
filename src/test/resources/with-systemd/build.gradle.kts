@@ -14,9 +14,10 @@ plugins {
 }
 
 version = ProjectVersion("0.1.0", BuildType.snapshot)
+group = "com.cthing"
+description = "With systemd."
 
 projectInfo {
-    description = "With systemd."
     projectUrl = "https://github.com/cthing/gradle-deb/"
 }
 
