@@ -27,7 +27,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
-import org.cthing.projectinfo.License;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -51,14 +50,10 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
 
-import com.cthing.gradle.plugins.core.ProjectInfoExtension;
-
 import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
-
-import static org.apache.tools.ant.types.resources.MultiRootFileSet.SetType.file;
 
 
 /**
@@ -480,10 +475,6 @@ public class DebTask extends DefaultTask {
         variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
         variables.put("project_dir", project.getProjectDir().getAbsolutePath());
         variables.put("project_build_dir", project.getLayout().getBuildDirectory().get().getAsFile().getAbsolutePath());
-
-        final ProjectInfoExtension info = (ProjectInfoExtension)project.getExtensions().findByName("projectInfo");
-        variables.put("project_organization", (info == null) ? this.organization.get() : info.getOrganization().getOrElse(""));
-        variables.put("project_license", (info == null) ? License.INTERNAL.toString() : info.getLicense().get().toString());
 
         final JavaPluginExtension javaExtension = project.getExtensions().findByType(JavaPluginExtension.class);
         if (javaExtension != null) {

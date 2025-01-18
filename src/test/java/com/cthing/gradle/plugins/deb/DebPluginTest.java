@@ -68,7 +68,6 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
         assertThat(variables).containsEntry("project_root_dir", this.project.getRootDir().getAbsolutePath());
         assertThat(variables).containsEntry("project_build_dir", this.buildDir.getAbsolutePath());
-        assertThat(variables).containsEntry("project_organization", "C Thing Software");
         assertThat(variables).containsEntry("project_main_resources_dir",
                                             new File(this.buildDir, "resources/main").getAbsolutePath());
     }
@@ -92,7 +91,6 @@ public class DebPluginTest {
         assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_ROOT_DIR", this.project.getRootDir().getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_BUILD_DIR", this.buildDir.getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_ORGANIZATION", "C Thing Software");
         assertThat(variables).containsEntry("PROJECT_MAIN_RESOURCES_DIR",
                                             new File(this.buildDir, "resources/main").getAbsolutePath());
         assertThat(variables).containsEntry("PROJECT_PACKAGE_NAME", "foobar");

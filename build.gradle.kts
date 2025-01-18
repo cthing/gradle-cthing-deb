@@ -28,7 +28,6 @@ dependencies {
     implementation(libs.corePlugins)
     implementation(libs.cthingProjectVersion)
     implementation(libs.freemarker)
-    implementation(libs.projectInfo)
 
     testImplementation(libs.assertJGradle)
     testImplementation(libs.junitApi)

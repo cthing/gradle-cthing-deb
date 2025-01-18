@@ -2,5 +2,3 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 
 Files: *
 Copyright: Copyright ${project_build_year} C Thing Software
-License: ${project_license}
- For internal use only.
