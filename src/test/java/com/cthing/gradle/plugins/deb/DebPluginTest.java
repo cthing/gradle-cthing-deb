@@ -17,7 +17,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.cthing.assertj.gradle.GradleProjectAssert.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.MAP;
+import static org.cthing.assertj.gradle.GradleAssertions.assertThat;
 
 
 public class DebPluginTest {
@@ -43,10 +44,10 @@ public class DebPluginTest {
     public void testTaskDefaults() {
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         assertThat(task).isNotNull();
-        assertThat(task.getDebianDir().isPresent()).isFalse();
-        assertThat(task.getDestinationDir().get()).isEqualTo(new File(this.buildDir, "distributions"));
-        assertThat(task.getWorkingDir().get()).isEqualTo(new File(this.buildDir, "debian-build/generateDeb"));
-        assertThat(task.getAdditionalVariables().get()).isEmpty();
+        assertThat(task.getDebianDir()).isEmpty();
+        assertThat(task.getDestinationDir()).contains(new File(this.buildDir, "distributions"));
+        assertThat(task.getWorkingDir()).contains(new File(this.buildDir, "debian-build/generateDeb"));
+        assertThat(task.getAdditionalVariables()).get(MAP).isEmpty();
     }
 
     @Test
@@ -54,22 +55,22 @@ public class DebPluginTest {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Map<String, String> variables = task.createTemplateVariables();
-        assertThat(variables).isNotNull();
-        assertThat(variables).containsEntry("project_group", this.project.getGroup().toString());
-        assertThat(variables).containsEntry("project_name", this.project.getName());
-        assertThat(variables).containsEntry("project_version", version.toString());
-        assertThat(variables).containsEntry("project_semantic_version", version.getCoreVersion());
-        assertThat(variables).containsEntry("project_build_number", version.getBuildNumber());
+        assertThat(variables).isNotNull()
+                             .containsEntry("project_group", this.project.getGroup().toString())
+                             .containsEntry("project_name", this.project.getName())
+                             .containsEntry("project_version", version.toString())
+                             .containsEntry("project_semantic_version", version.getCoreVersion())
+                             .containsEntry("project_build_number", version.getBuildNumber())
+                             .containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath())
+                             .containsEntry("project_root_dir", this.project.getRootDir().getAbsolutePath())
+                             .containsEntry("project_build_dir", this.buildDir.getAbsolutePath())
+                             .containsEntry("project_main_resources_dir",
+                                            new File(this.buildDir, "resources/main").getAbsolutePath());
         assertThat(variables.get("project_build_date")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
         assertThat(variables.get("project_build_year")).matches("\\d{4}");
         assertThat(variables.get("project_changelog_date")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
         assertThat(variables.get("project_branch")).isNotNull();
         assertThat(variables.get("project_commit")).isNotNull();
-        assertThat(variables).containsEntry("project_dir", this.project.getProjectDir().getAbsolutePath());
-        assertThat(variables).containsEntry("project_root_dir", this.project.getRootDir().getAbsolutePath());
-        assertThat(variables).containsEntry("project_build_dir", this.buildDir.getAbsolutePath());
-        assertThat(variables).containsEntry("project_main_resources_dir",
-                                            new File(this.buildDir, "resources/main").getAbsolutePath());
     }
 
     @Test
@@ -77,24 +78,24 @@ public class DebPluginTest {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
         final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
         final Map<String, String> variables = task.createEnvironmentVariables("foobar");
-        assertThat(variables).isNotNull();
-        assertThat(variables).containsEntry("PROJECT_GROUP", this.project.getGroup().toString());
-        assertThat(variables).containsEntry("PROJECT_NAME", this.project.getName());
-        assertThat(variables).containsEntry("PROJECT_VERSION", version.toString());
-        assertThat(variables).containsEntry("PROJECT_SEMANTIC_VERSION", version.getCoreVersion());
-        assertThat(variables).containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber());
+        assertThat(variables).isNotNull()
+                             .containsEntry("PROJECT_GROUP", this.project.getGroup().toString())
+                             .containsEntry("PROJECT_NAME", this.project.getName())
+                             .containsEntry("PROJECT_VERSION", version.toString())
+                             .containsEntry("PROJECT_SEMANTIC_VERSION", version.getCoreVersion())
+                             .containsEntry("PROJECT_BUILD_NUMBER", version.getBuildNumber())
+                             .containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath())
+                             .containsEntry("PROJECT_ROOT_DIR", this.project.getRootDir().getAbsolutePath())
+                             .containsEntry("PROJECT_BUILD_DIR", this.buildDir.getAbsolutePath())
+                             .containsEntry("PROJECT_MAIN_RESOURCES_DIR",
+                                            new File(this.buildDir, "resources/main").getAbsolutePath())
+                             .containsEntry("PROJECT_PACKAGE_NAME", "foobar")
+                             .containsEntry("PROJECT_DEBIAN_DIR", "debian/foobar");
         assertThat(variables.get("PROJECT_BUILD_DATE")).matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
         assertThat(variables.get("PROJECT_BUILD_YEAR")).matches("\\d{4}");
         assertThat(variables.get("PROJECT_CHANGELOG_DATE")).matches("\\w{3}, \\d{1,2} \\w{3} \\d{4} \\d{2}:\\d{2}:\\d{2} [+\\-]\\d{4}");
         assertThat(variables.get("PROJECT_BRANCH")).isNotNull();
         assertThat(variables.get("PROJECT_COMMIT")).isNotNull();
-        assertThat(variables).containsEntry("PROJECT_DIR", this.project.getProjectDir().getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_ROOT_DIR", this.project.getRootDir().getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_BUILD_DIR", this.buildDir.getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_MAIN_RESOURCES_DIR",
-                                            new File(this.buildDir, "resources/main").getAbsolutePath());
-        assertThat(variables).containsEntry("PROJECT_PACKAGE_NAME", "foobar");
-        assertThat(variables).containsEntry("PROJECT_DEBIAN_DIR", "debian/foobar");
     }
 
     @Test
@@ -110,10 +111,10 @@ public class DebPluginTest {
         task.additionalVariables(Map.of("m2", "v2", "m3", proc));
 
         final Map<String, String> variables = task.createTemplateVariables();
-        assertThat(variables).containsEntry("em1", "ev1");
-        assertThat(variables).containsEntry("m1", "v1");
-        assertThat(variables).containsEntry("m2", "v2");
-        assertThat(variables).containsEntry("m3", proc.get());
+        assertThat(variables).containsEntry("em1", "ev1")
+                             .containsEntry("m1", "v1")
+                             .containsEntry("m2", "v2")
+                             .containsEntry("m3", proc.get());
     }
 
     @Test
