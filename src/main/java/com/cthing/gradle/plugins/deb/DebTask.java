@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.cthing.gradle.plugins.publishing.CThingPublishingExtension;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -61,6 +62,7 @@ import freemarker.template.TemplateExceptionHandler;
  * properties defined in the build file are made available to the control file as template variables prefixed with
  * 'project_' (e.g. project_name, project_version).
  */
+@SuppressWarnings("LoggingSimilarMessage")
 public class DebTask extends DefaultTask {
 
     private static final Logger LOGGER = Logging.getLogger(DebTask.class);
@@ -475,6 +477,17 @@ public class DebTask extends DefaultTask {
         variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
         variables.put("project_dir", project.getProjectDir().getAbsolutePath());
         variables.put("project_build_dir", project.getLayout().getBuildDirectory().get().getAsFile().getAbsolutePath());
+
+        final CThingPublishingExtension pubExtension = project.getExtensions().getByType(CThingPublishingExtension.class);
+        final StringBuilder buffer = new StringBuilder();
+        buffer.append("XB-Cthing-Build-Number: ").append(version.getBuildNumber()).append('\n')
+              .append("XB-Cthing-Build-Date: ").append(version.getBuildDate());
+
+        final Set<String> cthingDependencies = pubExtension.findCThingDependencies();
+        if (!cthingDependencies.isEmpty()) {
+            buffer.append('\n').append("XB-Cthing-Dependencies: ").append(String.join(" ", cthingDependencies));
+        }
+        variables.put("cthing_metadata", buffer.toString());
 
         final JavaPluginExtension javaExtension = project.getExtensions().findByType(JavaPluginExtension.class);
         if (javaExtension != null) {

@@ -48,6 +48,21 @@ public class DebIntegTest extends AbstractPluginTest {
     }
 
     @Test
+    public void metadataPackage() {
+        copyProject("metadata-package");
+
+        final BuildResult result = createGradleRunner("generateDeb").build();
+        verifyBuild(result, "generateDeb");
+
+        final File packageFile = new File(this.projectDir,
+                                          "build/distributions/test-package_1.2.3_amd64.deb");
+        assertThat(packageFile).isFile();
+        assertThat(packageFile.length()).isGreaterThan(0);
+        assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
+        assertThat(readPackageControl(packageFile)).contains("./control", "./md5sums");
+    }
+
+    @Test
     public void withScripts() {
         copyProject("with-scripts");
 

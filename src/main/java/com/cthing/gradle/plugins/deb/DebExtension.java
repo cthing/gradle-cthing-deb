@@ -7,6 +7,7 @@ package com.cthing.gradle.plugins.deb;
 import java.util.Map;
 import java.util.Set;
 
+import org.cthing.gradle.plugins.publishing.CThingRepoExtension;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
@@ -21,11 +22,6 @@ import org.gradle.api.provider.SetProperty;
  */
 public class DebExtension {
 
-    private static final String CANDIDATE_REPO_PROPERTY = "cthing.nexus.aptCandidatesUrl";
-    private static final String SNAPSHOT_REPO_PROPERTY = "cthing.nexus.aptSnapshotsUrl";
-    private static final String USERNAME_PROPERTY = "cthing.nexus.user";
-    private static final String PASSWORD_PROPERTY = "cthing.nexus.password";
-
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
     private final Property<Boolean> lintianEnable;
@@ -33,7 +29,7 @@ public class DebExtension {
     private final Property<String> repositoryUsername;
     private final Property<String> repositoryPassword;
 
-    public DebExtension(final Project project) {
+    public DebExtension(final Project project, final CThingRepoExtension repoExtension) {
         final ObjectFactory objects = project.getObjects();
         this.additionalVariables = objects.mapProperty(String.class, Object.class);
         this.lintianTags = objects.setProperty(String.class);
@@ -43,16 +39,12 @@ public class DebExtension {
             final Object projectVersion = project.getVersion();
             final boolean releaseBuild = (projectVersion instanceof ProjectVersion)
                     && ((ProjectVersion)projectVersion).isReleaseBuild();
-            final String repositoryUrlProperty = releaseBuild ? CANDIDATE_REPO_PROPERTY : SNAPSHOT_REPO_PROPERTY;
-            return (String)project.findProperty(repositoryUrlProperty);
+            return releaseBuild ? repoExtension.getAptCandidatesUrl() : repoExtension.getAptSnapshotsUrl();
         });
         this.repositoryUrl = objects.property(String.class).convention(defaultRepositoryUrl);
 
-        final String defaultUsername = (String)project.findProperty(USERNAME_PROPERTY);
-        this.repositoryUsername = objects.property(String.class).convention(defaultUsername);
-
-        final String defaultPassword = (String)project.findProperty(PASSWORD_PROPERTY);
-        this.repositoryPassword = objects.property(String.class).convention(defaultPassword);
+        this.repositoryUsername = objects.property(String.class).convention(repoExtension.getUser());
+        this.repositoryPassword = objects.property(String.class).convention(repoExtension.getPassword());
     }
 
     /**

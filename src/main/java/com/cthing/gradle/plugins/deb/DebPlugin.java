@@ -4,6 +4,7 @@
  */
 package com.cthing.gradle.plugins.deb;
 
+import org.cthing.gradle.plugins.publishing.CThingRepoExtension;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -22,8 +23,11 @@ public class DebPlugin implements Plugin<Project> {
     @Override
     public void apply(final Project project) {
         project.getPluginManager().apply("base");
+        project.getPluginManager().apply("org.cthing.cthing-publishing");
 
-        final DebExtension extension = project.getExtensions().create(DEB_EXTENSION, DebExtension.class, project);
+        final CThingRepoExtension repoExtension = project.getExtensions().getByType(CThingRepoExtension.class);
+        final DebExtension extension = project.getExtensions().create(DEB_EXTENSION, DebExtension.class, project,
+                                                                      repoExtension);
 
         if (DebTask.toolsExist()) {
             final TaskProvider<DebPublishTask> publishDeb =

@@ -7,6 +7,7 @@ package com.cthing.gradle.plugins.deb;
 import java.util.Map;
 import java.util.Set;
 
+import org.cthing.gradle.plugins.publishing.CThingRepoExtension;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,9 @@ public class DebExtensionTest {
         final Project project = ProjectBuilder.builder().build();
         project.getPluginManager().apply("com.cthing.deb");
 
-        this.extension = new DebExtension(project);
+        final CThingRepoExtension repo = project.getExtensions().getByType(CThingRepoExtension.class);
+
+        this.extension = new DebExtension(project, repo);
     }
 
     @Test

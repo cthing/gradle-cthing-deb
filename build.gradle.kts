@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.pluginProject)
 }
 
-version = ProjectVersion("0.3.0", BuildType.snapshot)
+version = ProjectVersion("0.4.0", BuildType.snapshot)
 group = "com.cthing"
 description = "Plugin for creating DEB packages."
 
@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.commonsIO)
     implementation(libs.corePlugins)
     implementation(libs.cthingProjectVersion)
+    implementation(libs.cthingPublishingPlugin)
     implementation(libs.freemarker)
 
     testImplementation(libs.assertJGradle)
