@@ -75,6 +75,7 @@ public class DebTask extends DefaultTask {
     private final Property<File> destinationDir;
     private final Property<File> workingDir;
     private final Property<String> organization;
+    private final Property<String> scmUrl;
     private final MapProperty<String, Object> additionalVariables;
     private final SetProperty<String> lintianTags;
     private final Property<Boolean> lintianEnable;
@@ -95,6 +96,7 @@ public class DebTask extends DefaultTask {
         this.destinationDir = objects.property(File.class).convention(defaultDestDir);
         this.workingDir = objects.property(File.class).convention(defaultWorkingDir);
         this.organization = objects.property(String.class).convention("C Thing Software");
+        this.scmUrl = objects.property(String.class).convention("https://github.com/cthing/" + project.getName());
         this.additionalVariables = objects.mapProperty(String.class, Object.class);
         this.lintianTags = objects.setProperty(String.class);
         this.lintianEnable = objects.property(Boolean.class);
@@ -481,7 +483,8 @@ public class DebTask extends DefaultTask {
         final CThingPublishingExtension pubExtension = project.getExtensions().getByType(CThingPublishingExtension.class);
         final StringBuilder buffer = new StringBuilder();
         buffer.append("XB-Cthing-Build-Number: ").append(version.getBuildNumber()).append('\n')
-              .append("XB-Cthing-Build-Date: ").append(version.getBuildDate());
+              .append("XB-Cthing-Build-Date: ").append(version.getBuildDate()).append('\n')
+              .append("XB-Cthing-Scm-Url: ").append(this.scmUrl.get());
 
         final Set<String> cthingDependencies = pubExtension.findCThingDependencies();
         if (!cthingDependencies.isEmpty()) {
