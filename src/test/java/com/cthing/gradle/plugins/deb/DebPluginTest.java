@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.cthing.projectversion.BuildType;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,19 +43,20 @@ public class DebPluginTest {
 
     @Test
     public void testTaskDefaults() {
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        assertThat(task).isNotNull();
-        assertThat(task.getDebianDir()).isEmpty();
-        assertThat(task.getDestinationDir()).contains(new File(this.buildDir, "distributions"));
-        assertThat(task.getWorkingDir()).contains(new File(this.buildDir, "debian-build/generateDeb"));
-        assertThat(task.getAdditionalVariables()).get(MAP).isEmpty();
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        assertThat(taskProvider).hasValueSatisfying(task -> {
+            assertThat(task.getDebianDir()).isEmpty();
+            assertThat(task.getDestinationDir()).contains(new File(this.buildDir, "distributions"));
+            assertThat(task.getWorkingDir()).contains(new File(this.buildDir, "debian-build/generateDeb"));
+            assertThat(task.getAdditionalVariables()).get(MAP).isEmpty();
+        });
     }
 
     @Test
     public void testTemplateVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, String> variables = task.createTemplateVariables();
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final Map<String, String> variables = taskProvider.get().createTemplateVariables();
         assertThat(variables).isNotNull()
                              .containsEntry("project_group", this.project.getGroup().toString())
                              .containsEntry("project_name", this.project.getName())
@@ -76,8 +78,8 @@ public class DebPluginTest {
     @Test
     public void testEnvironmentVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Map<String, String> variables = task.createEnvironmentVariables("foobar");
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final Map<String, String> variables = taskProvider.get().createEnvironmentVariables("foobar");
         assertThat(variables).isNotNull()
                              .containsEntry("PROJECT_GROUP", this.project.getGroup().toString())
                              .containsEntry("PROJECT_NAME", this.project.getName())
@@ -106,21 +108,23 @@ public class DebPluginTest {
         extension.additionalVariable("m1", "v0");
 
         final Supplier<String> proc = () -> "hello";
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        task.additionalVariable("m1", "v1");
-        task.additionalVariables(Map.of("m2", "v2", "m3", proc));
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        assertThat(taskProvider).hasValueSatisfying(task -> {
+            task.additionalVariable("m1", "v1");
+            task.additionalVariables(Map.of("m2", "v2", "m3", proc));
 
-        final Map<String, String> variables = task.createTemplateVariables();
-        assertThat(variables).containsEntry("em1", "ev1")
-                             .containsEntry("m1", "v1")
-                             .containsEntry("m2", "v2")
-                             .containsEntry("m3", proc.get());
+            final Map<String, String> variables = task.createTemplateVariables();
+            assertThat(variables).containsEntry("em1", "ev1")
+                                 .containsEntry("m1", "v1")
+                                 .containsEntry("m2", "v2")
+                                 .containsEntry("m3", proc.get());
+        });
     }
 
     @Test
     public void testDefaultLintianTags() {
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Set<String> tags = task.createLintianTags();
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final Set<String> tags = taskProvider.get().createLintianTags();
         assertThat(tags).containsExactlyInAnyOrder("changelog-file-missing-in-native-package",
                                                    "no-copyright-file",
                                                    "binary-without-manpage",
@@ -135,19 +139,21 @@ public class DebPluginTest {
         extension.lintianTag("tag2");
         extension.lintianTags(Set.of("tag3", "tag4"));
 
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        final Set<String> tags = task.createLintianTags();
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final Set<String> tags = taskProvider.get().createLintianTags();
         assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
     }
 
     @Test
     public void testTaskLintianTagsAdditionalTags() {
-        final DebTask task = this.project.getTasks().create("generateDeb", DebTask.class);
-        task.lintianTag("tag1");
-        task.lintianTag("tag2");
-        task.lintianTags(Set.of("tag3", "tag4"));
+        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        assertThat(taskProvider).hasValueSatisfying(task -> {
+            task.lintianTag("tag1");
+            task.lintianTag("tag2");
+            task.lintianTags(Set.of("tag3", "tag4"));
 
-        final Set<String> tags = task.createLintianTags();
-        assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
+            final Set<String> tags = task.createLintianTags();
+            assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
+        });
     }
 }

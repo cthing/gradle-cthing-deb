@@ -1,5 +1,5 @@
 [versions]
-junit = "5.11.3"
+junit = "5.11.4"
 
 [plugins]
 pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.3.0-+"}
@@ -10,7 +10,7 @@ commonsIO = "commons-io:commons-io:2.18.0"
 corePlugins = "com.cthing:gradle-core:0.3.0-+"
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:1.0.0"
-freemarker = "org.freemarker:freemarker:2.3.33"
+freemarker = "org.freemarker:freemarker:2.3.34"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junitLauncher = "org.junit.platform:junit-platform-launcher:1.11.3"
+junitLauncher = "org.junit.platform:junit-platform-launcher:1.11.4"
