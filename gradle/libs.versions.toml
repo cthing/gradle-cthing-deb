@@ -2,7 +2,7 @@
 junit = "5.11.4"
 
 [plugins]
-pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.3.0-+"}
+pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.4.0-+"}
 
 [libraries]
 assertJGradle = "org.cthing:assertj-gradle:3.0.0"
