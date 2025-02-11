@@ -1,13 +1,14 @@
 [versions]
+cthingCore = "0.4.0-+"
 junit = "5.11.4"
 
 [plugins]
-pluginProject = { id = "com.cthing.gradle-plugin-project", version = "0.4.0-+"}
+pluginProject = { id = "com.cthing.gradle-plugin-project", version.ref = "cthingCore"}
 
 [libraries]
 assertJGradle = "org.cthing:assertj-gradle:3.0.0"
 commonsIO = "commons-io:commons-io:2.18.0"
-corePlugins = "com.cthing:gradle-core:0.4.0-+"
+corePlugins = { module = "com.cthing:gradle-core", version.ref = "cthingCore" }
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:1.0.0"
 freemarker = "org.freemarker:freemarker:2.3.34"
