@@ -10,7 +10,7 @@ assertJGradle = "org.cthing:assertj-gradle:3.0.0"
 commonsIO = "commons-io:commons-io:2.18.0"
 corePlugins = { module = "com.cthing:gradle-core", version.ref = "cthingCore" }
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
-cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:1.0.0"
+cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:2.0.0"
 freemarker = "org.freemarker:freemarker:2.3.34"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
