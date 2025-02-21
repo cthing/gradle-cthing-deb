@@ -1,0 +1,46 @@
+C Thing Software Internal License
+
+SPDX-License-Identifier: LicenseRef-CTHING-internal
+https://www.cthing.com/licenses/internal.txt
+
+1. License Grant
+
+This software and its associated documentation ("Software") are proprietary to
+C Thing Software and are licensed, not sold. C Thing Software grants authorized
+employees, contractors, and affiliates ("Users") a limited, non-exclusive,
+non-transferable, and revocable license to use, modify, and distribute the
+Software solely for internal purposes within C Thing Software.
+
+2. Restrictions
+
+Users may not, under any circumstances:
+
+a. Distribute, sublicense, sell, lease, or otherwise make the Software available
+   outside C Thing Software.
+
+b. Use the Software for any commercial or non-internal purpose.
+
+c. Reverse-engineer, decompile, or disassemble the Software, except as required by
+   applicable law.
+
+3. Confidentiality
+
+The Software contains confidential and proprietary information of C Thing Software.
+Users must take reasonable precautions to prevent unauthorized access or disclosure.
+
+4. Disclaimer of Warranties
+
+The Software is provided "as is" without warranties of any kind, express or implied,
+including but not limited to warranties of merchantability or fitness for a particular
+purpose.
+
+5. Limitation of Liability
+
+In no event shall C Thing Software be liable for any direct, indirect, incidental,
+or consequential damages arising from the use or inability to use the Software.
+
+6. Termination
+
+This license is automatically terminated if a User ceases to be affiliated with
+C Thing Software or breaches any term of this agreement. Upon termination, the User
+must delete all copies of the Software.

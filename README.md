@@ -25,5 +25,3 @@ packaging configuration files:
 In addition, the variables defined using the `additionalVariables` properties in the `deb` extension and `DebTask` instances
 are available in the configuration files.
 
-### License
-[C Thing Software Internal Use Only](https://www.cthing.com/licenses/internal.txt)
