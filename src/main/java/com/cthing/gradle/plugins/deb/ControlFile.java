@@ -92,6 +92,15 @@ public class ControlFile {
     }
 
     /**
+     * Obtains the filename for the package information file.
+     *
+     * @return Package filename
+     */
+    public String getInfoFilename() {
+        return String.format("%s_%s_%s.info", getPackage(), getVersion(), getArchitecture());
+    }
+
+    /**
      * Parses a Debian binary package control file.
      *
      * @param ins Control file to parse

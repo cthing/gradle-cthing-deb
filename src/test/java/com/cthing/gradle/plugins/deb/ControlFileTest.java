@@ -24,6 +24,7 @@ public class ControlFileTest {
         assertThat(controlFile.getVersion()).isNull();
         assertThat(controlFile.getArchitecture()).isNull();
         assertThat(controlFile.getPackageFilename()).isEqualTo("null_null_null.deb");
+        assertThat(controlFile.getInfoFilename()).isEqualTo("null_null_null.info");
         assertThat(controlFile).hasToString("null_null_null.deb");
     }
 
@@ -37,6 +38,7 @@ public class ControlFileTest {
         assertThat(controlFile.getVersion()).isEqualTo("1.2.3");
         assertThat(controlFile.getArchitecture()).isEqualTo("amd64");
         assertThat(controlFile.getPackageFilename()).isEqualTo("pkg_1.2.3_amd64.deb");
+        assertThat(controlFile.getInfoFilename()).isEqualTo("pkg_1.2.3_amd64.info");
         assertThat(controlFile).hasToString("pkg_1.2.3_amd64.deb");
     }
 

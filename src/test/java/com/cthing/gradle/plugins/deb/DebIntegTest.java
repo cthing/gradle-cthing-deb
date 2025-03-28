@@ -28,12 +28,14 @@ public class DebIntegTest extends AbstractPluginTest {
         final BuildResult result = createGradleRunner("generateDeb").build();
         verifyBuild(result, "generateDeb");
 
-        final File packageFile = new File(this.projectDir,
-                                          "build/distributions/test-package_1.2.3_amd64.deb");
+        final File packageFile = new File(this.projectDir, "build/distributions/test-package_1.2.3_amd64.deb");
         assertThat(packageFile).isFile();
         assertThat(packageFile.length()).isGreaterThan(0);
         assertThat(readPackageData(packageFile)).contains("./usr/bin/SampleFile");
         assertThat(readPackageControl(packageFile)).contains("./control", "./md5sums");
+
+        final File infoFile = new File(this.projectDir, "build/distributions/test-package_1.2.3_amd64.info");
+        assertThat(infoFile).isFile();
     }
 
     @Test

@@ -400,15 +400,22 @@ public class DebTask extends DefaultTask {
             throw new TaskExecutionException(this, ex);
         }
 
-
-
-
         final ControlFile controlFile = parseBinaryControlFile(dstDebianDir, packageName);
         final File packageFile = new File(wdir.getParentFile(), controlFile.getPackageFilename());
 
+        // Copy the package file to the destination directory
         getProject().copy(cs -> {
             cs.from(packageFile);
             cs.into(this.destinationDir);
+        });
+
+        // Copy the package information file (i.e. generated control file) to the destination directory.
+        // The information file has the same name as the package file but with a ".info" extension instead
+        // of a ".deb" extension.
+        getProject().copy(cs -> {
+            cs.from(getBinaryControlFile(dstDebianDir, packageName));
+            cs.into(this.destinationDir);
+            cs.rename("control", controlFile.getInfoFilename());
         });
 
         return packageFile;
@@ -420,8 +427,12 @@ public class DebTask extends DefaultTask {
     }
 
     private ControlFile parseBinaryControlFile(final File dstDebianDir, final String packageName) {
-        final Path ctrlFile = dstDebianDir.toPath().resolve(packageName).resolve("DEBIAN/control");
+        final Path ctrlFile = getBinaryControlFile(dstDebianDir, packageName);
         return parseControlFile(ctrlFile);
+    }
+
+    private Path getBinaryControlFile(final File dstDebianDir, final String packageName) {
+        return dstDebianDir.toPath().resolve(packageName).resolve("DEBIAN/control");
     }
 
     private ControlFile parseControlFile(final Path ctrlFile) {
