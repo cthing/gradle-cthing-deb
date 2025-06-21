@@ -18,10 +18,6 @@ version = ProjectVersion("0.1.0", BuildType.snapshot)
 group = "com.cthing"
 description = "Using variables."
 
-projectInfo {
-    projectUrl = "https://github.com/cthing/gradle-deb/"
-}
-
 configurations {
     // Required to make Checkstyle select the correct variant of Guava.
     cthingCheckstyleChecks {

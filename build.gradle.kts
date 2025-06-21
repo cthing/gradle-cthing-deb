@@ -12,10 +12,6 @@ version = ProjectVersion("0.4.0", BuildType.snapshot)
 group = "com.cthing"
 description = "Plugin for creating DEB packages."
 
-projectInfo {
-    projectUrl = "https://github.com/cthing/gradle-deb/"
-}
-
 gradlePlugin {
     plugins.create("debPlugin") {
         id = "com.cthing.deb"
