@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.cthingProjectVersion)
     implementation(libs.cthingPublishingPlugin)
     implementation(libs.freemarker)
+    implementation(libs.httpClient)
 
     testImplementation(libs.assertJGradle)
     testImplementation(libs.junitApi)

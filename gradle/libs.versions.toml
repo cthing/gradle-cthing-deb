@@ -12,6 +12,7 @@ corePlugins = { module = "com.cthing:gradle-core", version.ref = "cthingCore" }
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:2.0.0"
 freemarker = "org.freemarker:freemarker:2.3.34"
+httpClient = "org.apache.httpcomponents.client5:httpclient5:5.5"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 junitLauncher = "org.junit.platform:junit-platform-launcher:1.12.1"
