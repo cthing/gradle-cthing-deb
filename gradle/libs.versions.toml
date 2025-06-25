@@ -1,13 +1,13 @@
 [versions]
 cthingCore = "0.4.0-+"
-junit = "5.12.1"
+junit = "5.13.2"
 
 [plugins]
 pluginProject = { id = "com.cthing.gradle-plugin-project", version.ref = "cthingCore"}
 
 [libraries]
 assertJGradle = "org.cthing:assertj-gradle:3.0.0"
-commonsIO = "commons-io:commons-io:2.18.0"
+commonsIO = "commons-io:commons-io:2.19.0"
 corePlugins = { module = "com.cthing:gradle-core", version.ref = "cthingCore" }
 cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
 cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:2.0.0"
@@ -15,4 +15,4 @@ freemarker = "org.freemarker:freemarker:2.3.34"
 httpClient = "org.apache.httpcomponents.client5:httpclient5:5.5"
 junitApi = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-junitLauncher = "org.junit.platform:junit-platform-launcher:1.12.1"
+junitLauncher = "org.junit.platform:junit-platform-launcher:1.13.2"
