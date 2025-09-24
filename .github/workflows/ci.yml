@@ -24,9 +24,12 @@ jobs:
       - name: Install Debian packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install --yes dpkg-dev lintian
+          sudo apt-get install --yes bash tar dpkg dpkg-dev lintian
       - name: Verify installation
         run: |
+          /usr/bin/bash --version
+          /usr/bin/tar --version
+          /usr/bin/dpkg-deb --version
           /usr/bin/dpkg-buildpackage --version
           /usr/bin/dpkg-gencontrol --version
           /usr/bin/lintian --version
