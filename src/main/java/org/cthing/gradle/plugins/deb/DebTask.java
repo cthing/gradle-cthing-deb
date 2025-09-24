@@ -68,6 +68,7 @@ public class DebTask extends DefaultTask {
     private static final Logger LOGGER = Logging.getLogger(DebTask.class);
     private static final String DPKG_BUILDPACKAGE_TOOL = "/usr/bin/dpkg-buildpackage";
     private static final String DPKG_GENCONTROL_TOOL = "/usr/bin/dpkg-gencontrol";
+    private static final String DH_TOOL = "/usr/bin/dh";
     private static final String LINTIAN_TOOL = "/usr/bin/lintian";
 
     private final freemarker.template.Configuration templateConfig;
@@ -307,6 +308,7 @@ public class DebTask extends DefaultTask {
     public static boolean toolsExist() {
         return new File(DPKG_BUILDPACKAGE_TOOL).exists()
                 && new File(DPKG_GENCONTROL_TOOL).exists()
+                && new File(DH_TOOL).exists()
                 && new File(LINTIAN_TOOL).exists();
 
     }

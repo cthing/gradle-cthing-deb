@@ -22,9 +22,13 @@ plugins {
 
 In order to generate and verify a DEB package, the following tools must be available on the system.
 
-* `/usr/bin/dpkg-buildpackage`
-* `/usr/bin/dpkg-gencontrol`
-* `/usr/bin/lintian`
+| Tool                           | Ubuntu Package    |
+|--------------------------------|-------------------|
+| `/usr/bin/dpkg-buildpackage`   | `dpkg-dev`        |
+| `/usr/bin/dpkg-gencontrol`     | `dpkg-dev`        |
+| `/usr/bin/lintian`             | `lintian`         |
+| `/usr/bin/dh_*`                | `debhelper`       |
+| `/usr/share/build-essential/*` | `build-essential` |
 
 The `DebTask.toolsExist()` method can be called to verify that the required tools are installed.
 
