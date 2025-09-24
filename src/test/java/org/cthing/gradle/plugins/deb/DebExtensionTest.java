@@ -1,8 +1,8 @@
 /*
- * Copyright 2021 C Thing Software
- * All rights reserved.
+ * Copyright 2025 C Thing Software
+ * SPDX-License-Identifier: Apache-2.0
  */
-package com.cthing.gradle.plugins.deb;
+package org.cthing.gradle.plugins.deb;
 
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +27,7 @@ public class DebExtensionTest {
     @BeforeEach
     public void setup() {
         final Project project = ProjectBuilder.builder().build();
-        project.getPluginManager().apply("com.cthing.deb");
+        project.getPluginManager().apply("org.cthing.cthing-deb");
 
         final CThingRepoExtension repo = project.getExtensions().getByType(CThingRepoExtension.class);
 

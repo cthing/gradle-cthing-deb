@@ -32,7 +32,7 @@
 
     <!-- File must start with the C Thing copyright header -->
     <module name="RegexpHeader">
-        <property name="headerFile" value="${config_loc}/file_header_regex.txt"/>
+        <property name="headerFile" value="${config_loc}/header.txt"/>
     </module>
 
     <!-- Flag IDE generated comments -->

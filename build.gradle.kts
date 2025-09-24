@@ -1,35 +1,217 @@
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
 import org.cthing.projectversion.BuildType
 import org.cthing.projectversion.ProjectVersion
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-apply(from = File(gradle.gradleUserHomeDir, "cthing-repositories.gradle.kts"))
-
-plugins {
-    java
-    alias(libs.plugins.pluginProject)
+repositories {
+    mavenCentral()
+    gradlePluginPortal()
 }
 
-version = ProjectVersion("0.4.0", BuildType.snapshot)
-group = "com.cthing"
-description = "Plugin for creating DEB packages."
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    `java-gradle-plugin`
+    checkstyle
+    jacoco
+    signing
+    alias(libs.plugins.cthingPublishing)
+    alias(libs.plugins.cthingVersioning)
+    alias(libs.plugins.dependencyAnalysis)
+    alias(libs.plugins.pluginPublish)
+    alias(libs.plugins.spotbugs)
+    alias(libs.plugins.versions)
+}
+
+version = ProjectVersion("1.0.0", BuildType.snapshot)
+group = "org.cthing"
+description = "A Gradle plugin for creating DEB packages for C Thing Software projects."
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
+}
 
 gradlePlugin {
+    website = "https://github.com/cthing/gradle-cthing-deb"
+    vcsUrl = "https://github.com/cthing/gradle-cthing-deb"
+
     plugins.create("debPlugin") {
-        id = "com.cthing.deb"
-        implementationClass = "com.cthing.gradle.plugins.deb.DebPlugin"
+        id = "org.cthing.cthing-deb"
+        displayName = "Creates DEB packages for C Thing Software projects"
+        description = "A Gradle plugin for creating DEB packages for C Thing Software projects."
+        tags = listOf("deb", "apt", "packaging")
+        implementationClass = "org.cthing.gradle.plugins.deb.DebPlugin"
     }
 }
 
 dependencies {
+    api(libs.cthingPublishingPlugin)
+
     implementation(libs.commonsIO)
-    implementation(libs.corePlugins)
     implementation(libs.cthingProjectVersion)
-    implementation(libs.cthingPublishingPlugin)
     implementation(libs.freemarker)
     implementation(libs.httpClient)
+    implementation(libs.httpCore)
 
+    testImplementation(libs.assertJ)
     testImplementation(libs.assertJGradle)
     testImplementation(libs.junitApi)
+    testImplementation(libs.junitParams)
 
     testRuntimeOnly(libs.junitEngine)
     testRuntimeOnly(libs.junitLauncher)
+
+    spotbugsPlugins(libs.spotbugsContrib)
 }
+
+checkstyle {
+    toolVersion = libs.versions.checkstyle.get()
+    isIgnoreFailures = false
+    configFile = file("dev/checkstyle/checkstyle.xml")
+    configDirectory = file("dev/checkstyle")
+    isShowViolations = true
+}
+
+spotbugs {
+    toolVersion = libs.versions.spotbugs
+    ignoreFailures = false
+    effort = Effort.MAX
+    reportLevel = Confidence.MEDIUM
+    excludeFilter = file("dev/spotbugs/suppressions.xml")
+}
+
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+dependencyAnalysis {
+    issues {
+        all {
+            onAny {
+                severity("fail")
+            }
+        }
+    }
+}
+
+fun isNonStable(version: String): Boolean {
+    val stableKeyword = listOf("RELEASE", "FINAL", "GA").any { version.uppercase().contains(it) }
+    val regex = "^[0-9,.v-]+(-r)?$".toRegex()
+    val isStable = stableKeyword || regex.matches(version)
+    return isStable.not()
+}
+tasks {
+    withType<JavaCompile> {
+        options.release = libs.versions.java.get().toInt()
+        options.compilerArgs.addAll(listOf("-Xlint:all", "-Xlint:-options", "-Werror"))
+    }
+
+    withType<Jar> {
+        manifest.attributes(mapOf("Implementation-Title" to project.name,
+                                  "Implementation-Vendor" to "C Thing Software",
+                                  "Implementation-Version" to project.version))
+    }
+
+    withType<Javadoc> {
+        val year = SimpleDateFormat("yyyy", Locale.ENGLISH).format(Date())
+        with(options as StandardJavadocDocletOptions) {
+            breakIterator(false)
+            encoding("UTF-8")
+            bottom("Copyright &copy; $year C Thing Software")
+            addStringOption("Xdoclint:all,-missing", "-quiet")
+            addStringOption("Werror", "-quiet")
+            memberLevel = JavadocMemberLevel.PUBLIC
+            outputLevel = JavadocOutputLevel.QUIET
+        }
+    }
+
+    check {
+        dependsOn(buildHealth)
+    }
+
+    spotbugsMain {
+        reports.create("html").required = true
+    }
+
+    spotbugsTest {
+        isEnabled = false
+    }
+
+    publishPlugins {
+        doFirst {
+            if (!cthingPublishing.hasGradlePluginPortalCredentials()) {
+                throw GradleException("Gradle Plugin Portal credentials not defined")
+            }
+        }
+    }
+
+    withType<JacocoReport> {
+        dependsOn("test")
+        with(reports) {
+            xml.required = false
+            csv.required = false
+            html.required = true
+            html.outputLocation = layout.buildDirectory.dir("reports/jacoco")
+        }
+    }
+
+    withType<Test> {
+        useJUnitPlatform()
+
+        systemProperty("projectDir", projectDir)
+        systemProperty("buildDir", layout.buildDirectory.get().asFile)
+    }
+
+    withType<GenerateModuleMetadata> {
+        enabled = false
+    }
+
+    withType<Sign>().configureEach {
+        onlyIf("Signing credentials are present") {
+            cthingPublishing.canSign()
+        }
+    }
+
+    dependencyUpdates {
+        revision = "release"
+        gradleReleaseChannel = "current"
+        outputFormatter = "plain,xml,html"
+        outputDir = layout.buildDirectory.dir("reports/dependencyUpdates").get().asFile.absolutePath
+
+        rejectVersionIf {
+            isNonStable(candidate.version)
+        }
+    }
+}
+
+publishing {
+    afterEvaluate {
+        publications.withType<MavenPublication> {
+            pom(cthingPublishing.createPomAction())
+        }
+    }
+
+    val repoUrl = cthingRepo.repoUrl
+    if (repoUrl != null) {
+        repositories {
+            maven {
+                name = "CThingMaven"
+                setUrl(repoUrl)
+                credentials {
+                    username = cthingRepo.user
+                    password = cthingRepo.password
+                }
+            }
+        }
+    }
+}
+

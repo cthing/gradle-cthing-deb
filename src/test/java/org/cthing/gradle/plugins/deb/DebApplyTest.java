@@ -1,8 +1,8 @@
 /*
- * Copyright 2021 C Thing Software
- * All rights reserved.
+ * Copyright 2025 C Thing Software
+ * SPDX-License-Identifier: Apache-2.0
  */
-package com.cthing.gradle.plugins.deb;
+package org.cthing.gradle.plugins.deb;
 
 import java.io.File;
 import java.util.Map;
@@ -22,7 +22,7 @@ import static org.assertj.core.api.InstanceOfAssertFactories.MAP;
 import static org.cthing.assertj.gradle.GradleAssertions.assertThat;
 
 
-public class DebPluginTest {
+public class DebApplyTest {
 
     private Project project;
     private File buildDir;
@@ -30,7 +30,7 @@ public class DebPluginTest {
     @BeforeEach
     public void setUp() {
         this.project = ProjectBuilder.builder().withName("project").build();
-        this.project.getPluginManager().apply("com.cthing.deb");
+        this.project.getPluginManager().apply("org.cthing.cthing-deb");
         this.project.getPluginManager().apply("java");
         this.project.setVersion(new ProjectVersion("1.2.3", BuildType.snapshot));
         this.buildDir = this.project.getLayout().getBuildDirectory().get().getAsFile();

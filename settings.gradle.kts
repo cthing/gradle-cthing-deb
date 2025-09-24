@@ -1,3 +1,5 @@
-apply(from = File(gradle.gradleUserHomeDir, "cthing-settings.gradle.kts"))
+rootProject.name = "gradle-cthing-deb"
 
-rootProject.name = "gradle-deb"
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0")
+}

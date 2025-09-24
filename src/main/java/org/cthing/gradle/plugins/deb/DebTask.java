@@ -1,8 +1,8 @@
 /*
- * Copyright 2021 C Thing Software
- * All rights reserved.
+ * Copyright 2025 C Thing Software
+ * SPDX-License-Identifier: Apache-2.0
  */
-package com.cthing.gradle.plugins.deb;
+package org.cthing.gradle.plugins.deb;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,8 +95,8 @@ public class DebTask extends DefaultTask {
         this.debianDir = objects.property(File.class);
         this.destinationDir = objects.property(File.class).convention(defaultDestDir);
         this.workingDir = objects.property(File.class).convention(defaultWorkingDir);
-        this.organization = objects.property(String.class).convention("C Thing Software");
-        this.scmUrl = objects.property(String.class).convention("https://github.com/cthing/" + project.getName());
+        this.organization = objects.property(String.class);
+        this.scmUrl = objects.property(String.class);
         this.additionalVariables = objects.mapProperty(String.class, Object.class);
         this.lintianTags = objects.setProperty(String.class);
         this.lintianEnable = objects.property(Boolean.class);
@@ -157,6 +157,17 @@ public class DebTask extends DefaultTask {
     @Input
     public Property<String> getOrganization() {
         return this.organization;
+    }
+
+    /**
+     * Obtains the URL of the source code management system for the code in the package.
+     *
+     * @return URL of the package code SCM system.
+     */
+    @Input
+    @Optional
+    public Property<String> getScmUrl() {
+        return this.scmUrl;
     }
 
     /**
@@ -494,8 +505,10 @@ public class DebTask extends DefaultTask {
         final CThingPublishingExtension pubExtension = project.getExtensions().getByType(CThingPublishingExtension.class);
         final StringBuilder buffer = new StringBuilder();
         buffer.append("XB-Cthing-Build-Number: ").append(version.getBuildNumber()).append('\n')
-              .append("XB-Cthing-Build-Date: ").append(version.getBuildDate()).append('\n')
-              .append("XB-Cthing-Scm-Url: ").append(this.scmUrl.get());
+              .append("XB-Cthing-Build-Date: ").append(version.getBuildDate());
+        if (this.scmUrl.isPresent()) {
+              buffer.append('\n').append("XB-Cthing-Scm-Url: ").append(this.scmUrl.get());
+        }
 
         final Set<String> cthingDependencies = pubExtension.findCThingDependencies();
         if (!cthingDependencies.isEmpty()) {

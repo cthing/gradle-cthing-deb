@@ -1,8 +1,8 @@
 /*
- * Copyright 2021 C Thing Software
- * All rights reserved.
+ * Copyright 2025 C Thing Software
+ * SPDX-License-Identifier: Apache-2.0
  */
-package com.cthing.gradle.plugins.deb;
+package org.cthing.gradle.plugins.deb;
 
 import java.io.IOException;
 import java.io.InputStream;
