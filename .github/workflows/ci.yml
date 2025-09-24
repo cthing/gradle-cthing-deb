@@ -36,4 +36,4 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Run clean build javadoc
-        run: ./gradlew clean build javadoc
+        run: ./gradlew -i clean build javadoc
