@@ -27,10 +27,9 @@ jobs:
           sudo apt-get install --yes dpkg-dev lintian
       - name: Verify installation
         run: |
-          # The tools are now in the PATH and can be executed
-          dpkg-buildpackage --help
-          dpkg-gencontrol --help
-          lintian --version
+          /usr/bin/dpkg-buildpackage --version
+          /usr/bin/dpkg-gencontrol --version
+          /usr/bin/lintian --version
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
       - name: Run clean build javadoc
