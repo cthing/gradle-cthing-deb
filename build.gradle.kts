@@ -30,7 +30,7 @@ plugins {
     alias(libs.plugins.versions)
 }
 
-version = ProjectVersion("1.0.0", BuildType.release)
+version = ProjectVersion("1.0.1", BuildType.snapshot)
 group = "org.cthing"
 description = "A Gradle plugin for creating DEB packages for C Thing Software projects."
 
