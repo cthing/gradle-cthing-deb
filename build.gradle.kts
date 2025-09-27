@@ -44,13 +44,13 @@ gradlePlugin {
     website = "https://github.com/cthing/gradle-cthing-deb"
     vcsUrl = "https://github.com/cthing/gradle-cthing-deb"
 
-    plugins.create("debPlugin") {
+    plugins.create("debPlugin", Action {
         id = "org.cthing.cthing-deb"
         displayName = "Creates DEB packages for C Thing Software projects"
         description = "A Gradle plugin for creating DEB packages for C Thing Software projects."
         tags = listOf("deb", "apt", "packaging")
         implementationClass = "org.cthing.gradle.plugins.deb.DebPlugin"
-    }
+    })
 }
 
 dependencies {
