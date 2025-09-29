@@ -7,6 +7,10 @@
         <Class name="~.*DebTask"/>
     </Match>
     <Match>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+        <Class name="~.*DebTask"/>
+    </Match>
+    <Match>
         <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
     <Match>
@@ -16,8 +20,8 @@
         <Bug pattern="EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS"/>
     </Match>
     <Match>
-        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
-        <Class name="~.*DebTask"/>
+        <Bug pattern="PCOA_PARTIALLY_CONSTRUCTED_OBJECT_ACCESS"/>
+        <Class name="~.*Task"/>
     </Match>
     <Match>
         <Bug pattern="UAC_UNNECESSARY_API_CONVERSION_FILE_TO_PATH"/>

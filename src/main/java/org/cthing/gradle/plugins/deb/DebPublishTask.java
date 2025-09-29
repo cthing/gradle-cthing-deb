@@ -27,61 +27,61 @@ import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.PathEntity;
 import org.apache.hc.core5.util.Timeout;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
+import org.jspecify.annotations.NonNull;
 
 
 /**
  * Responsible for publishing DEB packages to an APT repository.
  */
-public class DebPublishTask extends DefaultTask {
+public abstract class DebPublishTask extends DefaultTask {
 
     private static final Timeout REPO_TIMEOUT = Timeout.of(5, TimeUnit.MINUTES);
     private static final String MULTIPART_FORM_DATA = "multipart/form-data";
-
-    private final Property<String> repositoryUrl;
-    private final Property<String> repositoryUsername;
-    private final Property<String> repositoryPassword;
 
     @SuppressWarnings("this-escape")
     public DebPublishTask() {
         setDescription("Publish DEB packages to an APT repository");
         setGroup("Publishing");
-
-        final ObjectFactory objects = getProject().getObjects();
-        this.repositoryUrl = objects.property(String.class);
-        this.repositoryUsername = objects.property(String.class);
-        this.repositoryPassword = objects.property(String.class);
     }
 
+    /**
+     * Obtains the URL of the repository containing the package.
+     *
+     * @return URL of the repository
+     */
     @Input
     @Optional
-    public Property<String> getRepositoryUrl() {
-        return this.repositoryUrl;
-    }
+    public abstract Property<@NonNull String> getRepositoryUrl();
 
+    /**
+     * Obtains the username for accessing the repository containing the package.
+     *
+     * @return Username to access the repository
+     */
     @Input
     @Optional
-    public Property<String> getRepositoryUsername() {
-        return this.repositoryUsername;
-    }
+    public abstract Property<@NonNull String> getRepositoryUsername();
 
+    /**
+     * Obtains the password for accessing the repository containing the package.
+     *
+     * @return Password to access the repository
+     */
     @Input
     @Optional
-    public Property<String> getRepositoryPassword() {
-        return this.repositoryPassword;
-    }
+    public abstract Property<@NonNull String> getRepositoryPassword();
 
     /**
      * Performs the publishing of the DEB packages to the APT repository.
      */
     @TaskAction
     public void publish() {
-        final String repoUrl = this.repositoryUrl.getOrNull();
+        final String repoUrl = getRepositoryUrl().getOrNull();
         if (repoUrl == null) {
             getLogger().lifecycle("Repository URL not defined, publish task is a noop");
         } else {
@@ -132,8 +132,8 @@ public class DebPublishTask extends DefaultTask {
         final HttpPost post = new HttpPost(uri);
         post.setHeader("Content-Type", MULTIPART_FORM_DATA);
         post.setEntity(new PathEntity(file, ContentType.create(MULTIPART_FORM_DATA)));
-        if (this.repositoryUsername.isPresent() && this.repositoryPassword.isPresent()) {
-            final String authStr = this.repositoryUsername.get() + ":" + this.repositoryPassword.get();
+        if (getRepositoryUsername().isPresent() && getRepositoryPassword().isPresent()) {
+            final String authStr = getRepositoryUsername().get() + ":" + getRepositoryPassword().get();
             final String auth = Base64.getEncoder().encodeToString(authStr.getBytes(StandardCharsets.UTF_8));
             post.setHeader("Authorization", "Basic " + auth);
         }

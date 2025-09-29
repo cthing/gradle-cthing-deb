@@ -14,6 +14,7 @@ import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.testfixtures.ProjectBuilder;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,8 @@ public class DebApplyTest {
 
     @Test
     public void testTaskDefaults() {
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         assertThat(taskProvider).hasValueSatisfying(task -> {
             assertThat(task.getDebianDir()).isEmpty();
             assertThat(task.getDestinationDir()).contains(new File(this.buildDir, "distributions"));
@@ -55,7 +57,8 @@ public class DebApplyTest {
     @Test
     public void testTemplateVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         final Map<String, String> variables = taskProvider.get().createTemplateVariables();
         assertThat(variables).isNotNull()
                              .containsEntry("project_group", this.project.getGroup().toString())
@@ -78,7 +81,8 @@ public class DebApplyTest {
     @Test
     public void testEnvironmentVariables() {
         final ProjectVersion version = (ProjectVersion)this.project.getVersion();
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         final Map<String, String> variables = taskProvider.get().createEnvironmentVariables("foobar");
         assertThat(variables).isNotNull()
                              .containsEntry("PROJECT_GROUP", this.project.getGroup().toString())
@@ -108,7 +112,8 @@ public class DebApplyTest {
         extension.additionalVariable("m1", "v0");
 
         final Supplier<String> proc = () -> "hello";
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         assertThat(taskProvider).hasValueSatisfying(task -> {
             task.additionalVariable("m1", "v1");
             task.additionalVariables(Map.of("m2", "v2", "m3", proc));
@@ -123,7 +128,8 @@ public class DebApplyTest {
 
     @Test
     public void testDefaultLintianTags() {
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         final Set<String> tags = taskProvider.get().createLintianTags();
         assertThat(tags).containsExactlyInAnyOrder("changelog-file-missing-in-native-package",
                                                    "no-copyright-file",
@@ -139,14 +145,16 @@ public class DebApplyTest {
         extension.lintianTag("tag2");
         extension.lintianTags(Set.of("tag3", "tag4"));
 
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         final Set<String> tags = taskProvider.get().createLintianTags();
         assertThat(tags).contains("tag1", "tag2", "tag3", "tag4");
     }
 
     @Test
     public void testTaskLintianTagsAdditionalTags() {
-        final TaskProvider<DebTask> taskProvider = this.project.getTasks().register("generateDeb", DebTask.class);
+        final TaskProvider<@NonNull DebTask> taskProvider = this.project.getTasks().register("generateDeb",
+                                                                                             DebTask.class);
         assertThat(taskProvider).hasValueSatisfying(task -> {
             task.lintianTag("tag1");
             task.lintianTag("tag2");

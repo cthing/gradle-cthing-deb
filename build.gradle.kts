@@ -55,6 +55,7 @@ gradlePlugin {
 
 dependencies {
     api(libs.cthingPublishingPlugin)
+    api(libs.jspecify)
 
     implementation(libs.commonsIO)
     implementation(libs.cthingProjectVersion)

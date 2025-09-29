@@ -35,7 +35,6 @@ import org.gradle.api.Project;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.BasePluginExtension;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.MapProperty;
@@ -50,6 +49,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
+import org.jspecify.annotations.NonNull;
 
 import freemarker.cache.FileTemplateLoader;
 import freemarker.template.Template;
@@ -63,7 +63,7 @@ import freemarker.template.TemplateExceptionHandler;
  * 'project_' (e.g. project_name, project_version).
  */
 @SuppressWarnings("LoggingSimilarMessage")
-public class DebTask extends DefaultTask {
+public abstract class DebTask extends DefaultTask {
 
     private static final Logger LOGGER = Logging.getLogger(DebTask.class);
     private static final String DPKG_BUILDPACKAGE_TOOL = "/usr/bin/dpkg-buildpackage";
@@ -72,14 +72,6 @@ public class DebTask extends DefaultTask {
     private static final String LINTIAN_TOOL = "/usr/bin/lintian";
 
     private final freemarker.template.Configuration templateConfig;
-    private final Property<File> debianDir;
-    private final Property<File> destinationDir;
-    private final Property<File> workingDir;
-    private final Property<String> organization;
-    private final Property<String> scmUrl;
-    private final MapProperty<String, Object> additionalVariables;
-    private final SetProperty<String> lintianTags;
-    private final Property<Boolean> lintianEnable;
 
     @SuppressWarnings("this-escape")
     public DebTask() {
@@ -87,24 +79,18 @@ public class DebTask extends DefaultTask {
         setGroup("Packaging");
 
         final Project project = getProject();
-        final Provider<File> defaultDestDir = project.getExtensions().getByType(BasePluginExtension.class)
-                                                          .getDistsDirectory().getAsFile();
+        final Provider<@NonNull File> defaultDestDir = project.getExtensions()
+                                                              .getByType(BasePluginExtension.class)
+                                                              .getDistsDirectory().getAsFile();
         final File defaultWorkingDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
                                                 "debian-build/" + getName());
 
-        final ObjectFactory objects = project.getObjects();
-        this.debianDir = objects.property(File.class);
-        this.destinationDir = objects.property(File.class).convention(defaultDestDir);
-        this.workingDir = objects.property(File.class).convention(defaultWorkingDir);
-        this.organization = objects.property(String.class);
-        this.scmUrl = objects.property(String.class);
-        this.additionalVariables = objects.mapProperty(String.class, Object.class);
-        this.lintianTags = objects.setProperty(String.class);
-        this.lintianEnable = objects.property(Boolean.class);
+        getDestinationDir().convention(defaultDestDir);
+        getWorkingDir().convention(defaultWorkingDir);
 
         final DebExtension debExtension = project.getExtensions().findByType(DebExtension.class);
         if (debExtension != null) {
-            this.lintianEnable.convention(debExtension.getLintianEnable());
+            getLintianEnable().convention(debExtension.getLintianEnable());
         }
 
         this.templateConfig = new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_28);
@@ -126,9 +112,7 @@ public class DebTask extends DefaultTask {
      * @return Debian configuration directory.
      */
     @InputDirectory
-    public Property<File> getDebianDir() {
-        return this.debianDir;
-    }
+    public abstract Property<@NonNull File> getDebianDir();
 
     /**
      * Obtains the directory where the package will be generated.
@@ -136,9 +120,7 @@ public class DebTask extends DefaultTask {
      * @return Package directory. Default is {@link BasePluginExtension#getDistsDirectory()}.
      */
     @OutputDirectory
-    public Property<File> getDestinationDir() {
-        return this.destinationDir;
-    }
+    public abstract Property<@NonNull File> getDestinationDir();
 
     /**
      * Obtains the root directory for the Debian package build process.
@@ -146,9 +128,7 @@ public class DebTask extends DefaultTask {
      * @return Package build directory.
      */
     @Internal
-    public Property<File> getWorkingDir() {
-        return this.workingDir;
-    }
+    public abstract Property<@NonNull File> getWorkingDir();
 
     /**
      * Obtains the organization creating the package.
@@ -156,9 +136,7 @@ public class DebTask extends DefaultTask {
      * @return Name of the creating organization.
      */
     @Input
-    public Property<String> getOrganization() {
-        return this.organization;
-    }
+    public abstract Property<@NonNull String> getOrganization();
 
     /**
      * Obtains the URL of the source code management system for the code in the package.
@@ -167,9 +145,7 @@ public class DebTask extends DefaultTask {
      */
     @Input
     @Optional
-    public Property<String> getScmUrl() {
-        return this.scmUrl;
-    }
+    public abstract Property<@NonNull String> getScmUrl();
 
     /**
      * Additional variables to define for use in the Debian control file. The map consists of the variable name as
@@ -186,9 +162,7 @@ public class DebTask extends DefaultTask {
      */
     @Input
     @Optional
-    public MapProperty<String, Object> getAdditionalVariables() {
-        return this.additionalVariables;
-    }
+    public abstract MapProperty<@NonNull String, @NonNull Object> getAdditionalVariables();
 
     /**
      * Adds the specified map to the existing map of additional variables to define for use in the Debian control file.
@@ -204,7 +178,7 @@ public class DebTask extends DefaultTask {
      * @param variables  Variables to add to the Debian control file variables.
      */
     public void additionalVariables(final Map<String, Object> variables) {
-        this.additionalVariables.putAll(variables);
+        getAdditionalVariables().putAll(variables);
     }
 
     /**
@@ -220,7 +194,7 @@ public class DebTask extends DefaultTask {
      * @param value  The variable to add.
      */
     public void additionalVariable(final String name, final Object value) {
-        this.additionalVariables.put(name, value);
+        getAdditionalVariables().put(name, value);
     }
 
     /**
@@ -230,9 +204,7 @@ public class DebTask extends DefaultTask {
      */
     @Input
     @Optional
-    public SetProperty<String> getLintianTags() {
-        return this.lintianTags;
-    }
+    public abstract SetProperty<@NonNull String> getLintianTags();
 
     /**
      * Adds the specified Lintian suppression tags.
@@ -240,7 +212,7 @@ public class DebTask extends DefaultTask {
      * @param tags Linitian suppression tags.
      */
     public void lintianTags(final Set<String> tags) {
-        this.lintianTags.addAll(tags);
+        getLintianTags().addAll(tags);
     }
 
     /**
@@ -249,7 +221,7 @@ public class DebTask extends DefaultTask {
      * @param tag Lintian suppression tag.
      */
     public void lintianTag(final String tag) {
-        this.lintianTags.add(tag);
+        getLintianTags().add(tag);
     }
 
     /**
@@ -259,9 +231,7 @@ public class DebTask extends DefaultTask {
      */
     @Input
     @Optional
-    public Property<Boolean> getLintianEnable() {
-        return this.lintianEnable;
-    }
+    public abstract Property<@NonNull Boolean> getLintianEnable();
 
     /**
      * Provides the DEB package artifacts that will be generated by this task. This method should only be called
@@ -274,7 +244,7 @@ public class DebTask extends DefaultTask {
         final Set<File> artifacts = new HashSet<>();
 
         try {
-            final File tempDir = Files.createTempDirectory(this.workingDir.get().toPath(), "ctrl").toFile();
+            final File tempDir = Files.createTempDirectory(getWorkingDir().get().toPath(), "ctrl").toFile();
             createDebianDir(tempDir);
 
             final List<String> dpkgBuildArgs = new ArrayList<>();
@@ -292,7 +262,7 @@ public class DebTask extends DefaultTask {
             }
 
             final ControlFile controlFile = parseControlFile(tempDir.toPath().resolve("binaryControl"));
-            artifacts.add(new File(this.destinationDir.get(), controlFile.getPackageFilename()));
+            artifacts.add(new File(getDestinationDir().get(), controlFile.getPackageFilename()));
         } catch (final IOException | InterruptedException ex) {
             throw new TaskExecutionException(this, ex);
         }
@@ -325,7 +295,7 @@ public class DebTask extends DefaultTask {
         }
 
         // Start with a clean working directory.
-        final File wdir = this.workingDir.get();
+        final File wdir = getWorkingDir().get();
         FileUtils.deleteQuietly(wdir);
 
         // Create the working and configuration directories.
@@ -340,7 +310,7 @@ public class DebTask extends DefaultTask {
         final File packageFile = buildPackage(wdir, dstDebianDir, sourceControlFile.getPackage());
 
         // Lint the built package if desired.
-        if (this.lintianEnable.get()) {
+        if (getLintianEnable().get()) {
             lintPackage(packageFile);
         }
     }
@@ -352,7 +322,7 @@ public class DebTask extends DefaultTask {
             FileUtils.createParentDirectories(dstDebianDir);
 
             // Copy the debian directory to the working directory.
-            final File srcDebianDir = this.debianDir.get();
+            final File srcDebianDir = getDebianDir().get();
             FileUtils.copyDirectory(srcDebianDir, dstDebianDir);
 
             // Perform variable replacement on specific configuration files.
@@ -419,7 +389,7 @@ public class DebTask extends DefaultTask {
         // Copy the package file to the destination directory
         getProject().copy(cs -> {
             cs.from(packageFile);
-            cs.into(this.destinationDir);
+            cs.into(getDestinationDir());
         });
 
         // Copy the package information file (i.e. generated control file) to the destination directory.
@@ -427,7 +397,7 @@ public class DebTask extends DefaultTask {
         // of a ".deb" extension.
         getProject().copy(cs -> {
             cs.from(getBinaryControlFile(dstDebianDir, packageName));
-            cs.into(this.destinationDir);
+            cs.into(getDestinationDir());
             cs.rename("control", controlFile.getInfoFilename());
         });
 
@@ -508,8 +478,8 @@ public class DebTask extends DefaultTask {
         final StringBuilder buffer = new StringBuilder();
         buffer.append("XB-Cthing-Build-Number: ").append(version.getBuildNumber()).append('\n')
               .append("XB-Cthing-Build-Date: ").append(version.getBuildDate());
-        if (this.scmUrl.isPresent()) {
-              buffer.append('\n').append("XB-Cthing-Scm-Url: ").append(this.scmUrl.get());
+        if (getScmUrl().isPresent()) {
+              buffer.append('\n').append("XB-Cthing-Scm-Url: ").append(getScmUrl().get());
         }
 
         final Set<String> cthingDependencies = pubExtension.findCThingDependencies();
@@ -534,7 +504,7 @@ public class DebTask extends DefaultTask {
         if (extension != null) {
             extension.getAdditionalVariables().get().forEach((key, value) -> variables.put(key, stringize(value)));
         }
-        this.additionalVariables.get().forEach((key, value) -> variables.put(key, stringize(value)));
+        getAdditionalVariables().get().forEach((key, value) -> variables.put(key, stringize(value)));
 
         return variables;
     }
@@ -594,7 +564,7 @@ public class DebTask extends DefaultTask {
         if (extension != null) {
             tags.addAll(extension.getLintianTags().get());
         }
-        tags.addAll(this.lintianTags.get());
+        tags.addAll(getLintianTags().get());
 
         return tags;
     }

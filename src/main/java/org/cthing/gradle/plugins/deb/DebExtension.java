@@ -15,6 +15,7 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.jspecify.annotations.NonNull;
 
 
 /**
@@ -22,12 +23,12 @@ import org.gradle.api.provider.SetProperty;
  */
 public class DebExtension {
 
-    private final MapProperty<String, Object> additionalVariables;
-    private final SetProperty<String> lintianTags;
-    private final Property<Boolean> lintianEnable;
-    private final Property<String> repositoryUrl;
-    private final Property<String> repositoryUsername;
-    private final Property<String> repositoryPassword;
+    private final MapProperty<@NonNull String, @NonNull Object> additionalVariables;
+    private final SetProperty<@NonNull String> lintianTags;
+    private final Property<@NonNull Boolean> lintianEnable;
+    private final Property<@NonNull String> repositoryUrl;
+    private final Property<@NonNull String> repositoryUsername;
+    private final Property<@NonNull String> repositoryPassword;
 
     public DebExtension(final Project project, final CThingRepoExtension repoExtension) {
         final ObjectFactory objects = project.getObjects();
@@ -35,7 +36,7 @@ public class DebExtension {
         this.lintianTags = objects.setProperty(String.class);
         this.lintianEnable = objects.property(Boolean.class).convention(Boolean.TRUE);
 
-        final Provider<String> defaultRepositoryUrl = project.provider(() -> {
+        final Provider<@NonNull String> defaultRepositoryUrl = project.provider(() -> {
             final Object projectVersion = project.getVersion();
             final boolean releaseBuild = (projectVersion instanceof ProjectVersion)
                     && ((ProjectVersion)projectVersion).isReleaseBuild();
@@ -55,7 +56,7 @@ public class DebExtension {
      *         beyond those defined from the build properties. These variables are merged with any variables defined
      *         in the task (task control variables take precedence if there are overlapping variables).
      */
-    public MapProperty<String, Object> getAdditionalVariables() {
+    public MapProperty<@NonNull String, @NonNull Object> getAdditionalVariables() {
         return this.additionalVariables;
     }
 
@@ -86,7 +87,7 @@ public class DebExtension {
      *
      * @return Lintian suppression tags.
      */
-    public SetProperty<String> getLintianTags() {
+    public SetProperty<@NonNull String> getLintianTags() {
         return this.lintianTags;
     }
 
@@ -113,7 +114,7 @@ public class DebExtension {
      *
      * @return Enables checking packages with Lintian. Default is {@code true}.
      */
-    public Property<Boolean> getLintianEnable() {
+    public Property<@NonNull Boolean> getLintianEnable() {
         return this.lintianEnable;
     }
 
@@ -122,7 +123,7 @@ public class DebExtension {
      *
      * @return APT repository URL.
      */
-    public Property<String> getRepositoryUrl() {
+    public Property<@NonNull String> getRepositoryUrl() {
         return this.repositoryUrl;
     }
 
@@ -131,7 +132,7 @@ public class DebExtension {
      *
      * @return Repository access username.
      */
-    public Property<String> getRepositoryUsername() {
+    public Property<@NonNull String> getRepositoryUsername() {
         return this.repositoryUsername;
     }
 
@@ -140,7 +141,7 @@ public class DebExtension {
      *
      * @return Repository access password.
      */
-    public Property<String> getRepositoryPassword() {
+    public Property<@NonNull String> getRepositoryPassword() {
         return this.repositoryPassword;
     }
 }

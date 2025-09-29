@@ -10,13 +10,14 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.tasks.TaskProvider;
+import org.jspecify.annotations.NonNull;
 
 
 /**
  * Creates Debian packages.
  */
 @SuppressWarnings("unused")
-public class DebPlugin implements Plugin<Project> {
+public class DebPlugin implements Plugin<@NonNull Project> {
 
     public static final String DEB_EXTENSION = "deb";
 
@@ -30,7 +31,7 @@ public class DebPlugin implements Plugin<Project> {
                                                                       repoExtension);
 
         if (DebTask.toolsExist()) {
-            final TaskProvider<DebPublishTask> publishDeb =
+            final TaskProvider<@NonNull DebPublishTask> publishDeb =
                     project.getTasks().register("publishDeb", DebPublishTask.class, task -> {
                         task.getRepositoryUrl().set(extension.getRepositoryUrl());
                         task.getRepositoryUsername().set(extension.getRepositoryUsername());
