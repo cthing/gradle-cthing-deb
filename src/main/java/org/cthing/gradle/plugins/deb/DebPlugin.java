@@ -4,11 +4,16 @@
  */
 package org.cthing.gradle.plugins.deb;
 
+import java.io.File;
+
+import org.cthing.gradle.plugins.publishing.CThingPublishingExtension;
 import org.cthing.gradle.plugins.publishing.CThingRepoExtension;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.UnknownTaskException;
+import org.gradle.api.plugins.BasePluginExtension;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.jspecify.annotations.NonNull;
 
@@ -38,7 +43,28 @@ public class DebPlugin implements Plugin<@NonNull Project> {
                         task.getRepositoryPassword().set(extension.getRepositoryPassword());
                     });
 
-            project.getTasks().withType(DebTask.class, debTask -> publishDeb.configure(t -> t.dependsOn(debTask)));
+            project.getTasks().withType(DebTask.class, debTask -> {
+                final Provider<@NonNull File> defaultDestDir = project.getExtensions()
+                                                                      .getByType(BasePluginExtension.class)
+                                                                      .getDistsDirectory().getAsFile();
+                debTask.getProjectName().convention(project.getName());
+                debTask.getProjectGroup().convention(project.getGroup());
+                debTask.getProjectVersion().convention(project.getVersion());
+                debTask.getRootDir().convention(project.getRootDir());
+                debTask.getDestinationDir().convention(defaultDestDir.get());
+                debTask.getLintianEnable().convention(extension.getLintianEnable());
+                debTask.getLintianTags().addAll(extension.getLintianTags());
+                debTask.getAdditionalVariables().putAll(extension.getAdditionalVariables());
+
+                final CThingPublishingExtension pubExtension =
+                        project.getExtensions().getByType(CThingPublishingExtension.class);
+                debTask.getCThingDependencies().convention(pubExtension.findCThingDependencies());
+
+                publishDeb.configure(t -> {
+                    t.dependsOn(debTask);
+                    t.getDebTasks().add(debTask);
+                });
+            });
 
             project.afterEvaluate(proj -> {
                 try {

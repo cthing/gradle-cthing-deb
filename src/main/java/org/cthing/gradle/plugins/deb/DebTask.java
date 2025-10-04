@@ -26,20 +26,20 @@ import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.apache.commons.io.FileUtils;
-import org.cthing.gradle.plugins.publishing.CThingPublishingExtension;
 import org.cthing.projectversion.ProjectVersion;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
+import org.gradle.api.file.ProjectLayout;
+import org.gradle.api.internal.file.FileOperations;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePluginExtension;
-import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
@@ -71,27 +71,20 @@ public abstract class DebTask extends DefaultTask {
     private static final String DH_TOOL = "/usr/bin/dh";
     private static final String LINTIAN_TOOL = "/usr/bin/lintian";
 
+    private final SourceSetContainer sourceSets;
     private final freemarker.template.Configuration templateConfig;
 
-    @SuppressWarnings("this-escape")
-    public DebTask() {
+    @SuppressWarnings({ "this-escape", "AssignmentOrReturnOfFieldWithMutableType" })
+    @Inject
+    public DebTask(final SourceSetContainer sourceSets) {
+        this.sourceSets = sourceSets;
+
         setDescription("Create a Debian package");
         setGroup("Packaging");
 
-        final Project project = getProject();
-        final Provider<@NonNull File> defaultDestDir = project.getExtensions()
-                                                              .getByType(BasePluginExtension.class)
-                                                              .getDistsDirectory().getAsFile();
-        final File defaultWorkingDir = new File(project.getLayout().getBuildDirectory().get().getAsFile(),
+        final File defaultWorkingDir = new File(getProjectLayout().getBuildDirectory().get().getAsFile(),
                                                 "debian-build/" + getName());
-
-        getDestinationDir().convention(defaultDestDir);
         getWorkingDir().convention(defaultWorkingDir);
-
-        final DebExtension debExtension = project.getExtensions().findByType(DebExtension.class);
-        if (debExtension != null) {
-            getLintianEnable().convention(debExtension.getLintianEnable());
-        }
 
         this.templateConfig = new freemarker.template.Configuration(freemarker.template.Configuration.VERSION_2_3_28);
         try {
@@ -104,6 +97,54 @@ public abstract class DebTask extends DefaultTask {
             throw new TaskExecutionException(this, ex);
         }
     }
+
+    /**
+     * Obtains an instance of the Gradle file operations object.
+     *
+     * @return Gradle file operations object
+     */
+    @Inject
+    protected abstract FileOperations getFileOperations();
+
+    /**
+     * Obtains an instance of the Gradle project layout object.
+     *
+     * @return Gradle project layout object
+     */
+    @Inject
+    protected abstract ProjectLayout getProjectLayout();
+
+    /**
+     * Obtains the name of the project.
+     *
+     * @return Name of the project
+     */
+    @Input
+    public abstract Property<@NonNull String> getProjectName();
+
+    /**
+     * Obtains the group name of the project.
+     *
+     * @return Group name of the project
+     */
+    @Input
+    public abstract Property<@NonNull Object> getProjectGroup();
+
+    /**
+     * Obtains the version of the project.
+     *
+     * @return Version of the project
+     */
+    @Input
+    public abstract Property<@NonNull Object> getProjectVersion();
+
+    /**
+     * Obtains the root directory of the project.
+     *
+     * @return Project root directory
+     */
+    @InputDirectory
+    public abstract Property<@NonNull File> getRootDir();
 
     /**
      * Obtains the directory containing the control and other configuration files. The directory is copied to the
@@ -146,6 +187,14 @@ public abstract class DebTask extends DefaultTask {
     @Input
     @Optional
     public abstract Property<@NonNull String> getScmUrl();
+
+    /**
+     * Obtains the dependencies on C Thing Software libraries.
+     *
+     * @return C Thing Software library dependencies
+     */
+    @Input
+    public abstract SetProperty<@NonNull String> getCThingDependencies();
 
     /**
      * Additional variables to define for use in the Debian control file. The map consists of the variable name as
@@ -243,29 +292,29 @@ public abstract class DebTask extends DefaultTask {
     public Set<File> getArtifacts() {
         final Set<File> artifacts = new HashSet<>();
 
-        try {
+            try {
             final File tempDir = Files.createTempDirectory(getWorkingDir().get().toPath(), "ctrl").toFile();
-            createDebianDir(tempDir);
+                createDebianDir(tempDir);
 
-            final List<String> dpkgBuildArgs = new ArrayList<>();
-            dpkgBuildArgs.add(DPKG_GENCONTROL_TOOL);
-            dpkgBuildArgs.add("-ObinaryControl");
+                final List<String> dpkgBuildArgs = new ArrayList<>();
+                dpkgBuildArgs.add(DPKG_GENCONTROL_TOOL);
+                dpkgBuildArgs.add("-ObinaryControl");
 
-            LOGGER.info("Running {} in {}", DPKG_GENCONTROL_TOOL, tempDir);
-            final ProcessBuilder processBuilder = new ProcessBuilder(dpkgBuildArgs);
-            processBuilder.directory(tempDir);
-            final Process process = processBuilder.start();
-            final String errorOutput = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-            final int status = process.waitFor();
-            if (status != 0) {
-                throw new IOException(errorOutput);
-            }
+                LOGGER.info("Running {} in {}", DPKG_GENCONTROL_TOOL, tempDir);
+                final ProcessBuilder processBuilder = new ProcessBuilder(dpkgBuildArgs);
+                processBuilder.directory(tempDir);
+                final Process process = processBuilder.start();
+                final String errorOutput = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
+                final int status = process.waitFor();
+                if (status != 0) {
+                    throw new IOException(errorOutput);
+                }
 
-            final ControlFile controlFile = parseControlFile(tempDir.toPath().resolve("binaryControl"));
+                final ControlFile controlFile = parseControlFile(tempDir.toPath().resolve("binaryControl"));
             artifacts.add(new File(getDestinationDir().get(), controlFile.getPackageFilename()));
-        } catch (final IOException | InterruptedException ex) {
-            throw new TaskExecutionException(this, ex);
-        }
+            } catch (final IOException | InterruptedException ex) {
+                throw new TaskExecutionException(this, ex);
+            }
 
         return artifacts;
     }
@@ -387,7 +436,7 @@ public abstract class DebTask extends DefaultTask {
         final File packageFile = new File(wdir.getParentFile(), controlFile.getPackageFilename());
 
         // Copy the package file to the destination directory
-        getProject().copy(cs -> {
+        getFileOperations().copy(cs -> {
             cs.from(packageFile);
             cs.into(getDestinationDir());
         });
@@ -395,7 +444,7 @@ public abstract class DebTask extends DefaultTask {
         // Copy the package information file (i.e. generated control file) to the destination directory.
         // The information file has the same name as the package file but with a ".info" extension instead
         // of a ".deb" extension.
-        getProject().copy(cs -> {
+        getFileOperations().copy(cs -> {
             cs.from(getBinaryControlFile(dstDebianDir, packageName));
             cs.into(getDestinationDir());
             cs.rename("control", controlFile.getInfoFilename());
@@ -455,13 +504,12 @@ public abstract class DebTask extends DefaultTask {
      * @return Map of variable names to their values.
      */
     Map<String, String> createTemplateVariables() {
-        final Project project = getProject();
-        final Object projectVersion = project.getVersion();
+        final Object projectVersion = getProjectVersion().get();
         final ProjectVersion version = (projectVersion instanceof ProjectVersion)
                                         ? (ProjectVersion)projectVersion : ProjectVersion.NO_VERSION;
         final Map<String, String> variables = new HashMap<>();
-        variables.put("project_group", project.getGroup().toString());
-        variables.put("project_name", project.getName());
+        variables.put("project_group", getProjectGroup().get().toString());
+        variables.put("project_name", getProjectName().get());
         variables.put("project_version", version.toString());
         variables.put("project_semantic_version", version.getCoreVersion());
         variables.put("project_build_number", version.getBuildNumber());
@@ -470,11 +518,10 @@ public abstract class DebTask extends DefaultTask {
         variables.put("project_changelog_date", getChangelogDate(version));
         variables.put("project_branch", version.getBranch());
         variables.put("project_commit", version.getCommit());
-        variables.put("project_root_dir", project.getRootDir().getAbsolutePath());
-        variables.put("project_dir", project.getProjectDir().getAbsolutePath());
-        variables.put("project_build_dir", project.getLayout().getBuildDirectory().get().getAsFile().getAbsolutePath());
+        variables.put("project_root_dir", getRootDir().get().getAbsolutePath());
+        variables.put("project_dir", getProjectLayout().getProjectDirectory().getAsFile().getAbsolutePath());
+        variables.put("project_build_dir", getProjectLayout().getBuildDirectory().get().getAsFile().getAbsolutePath());
 
-        final CThingPublishingExtension pubExtension = project.getExtensions().getByType(CThingPublishingExtension.class);
         final StringBuilder buffer = new StringBuilder();
         buffer.append("XB-Cthing-Build-Number: ").append(version.getBuildNumber()).append('\n')
               .append("XB-Cthing-Build-Date: ").append(version.getBuildDate());
@@ -482,28 +529,20 @@ public abstract class DebTask extends DefaultTask {
               buffer.append('\n').append("XB-Cthing-Scm-Url: ").append(getScmUrl().get());
         }
 
-        final Set<String> cthingDependencies = pubExtension.findCThingDependencies();
+        final Set<String> cthingDependencies = getCThingDependencies().get();
         if (!cthingDependencies.isEmpty()) {
             buffer.append('\n').append("XB-Cthing-Dependencies: ").append(String.join(" ", cthingDependencies));
         }
         variables.put("cthing_metadata", buffer.toString());
 
-        final JavaPluginExtension javaExtension = project.getExtensions().findByType(JavaPluginExtension.class);
-        if (javaExtension != null) {
-            project.getExtensions().getByType(SourceSetContainer.class)
-                   .forEach(sourceSet -> {
-                             final File resourcesDir = sourceSet.getOutput().getResourcesDir();
-                             if (resourcesDir != null) {
-                                 variables.put(String.format("project_%s_resources_dir", sourceSet.getName()),
-                                               resourcesDir.getAbsolutePath());
-                             }
-                         });
-        }
+        this.sourceSets.forEach(sourceSet -> {
+            final File resourcesDir = sourceSet.getOutput().getResourcesDir();
+            if (resourcesDir != null) {
+                variables.put(String.format("project_%s_resources_dir", sourceSet.getName()),
+                              resourcesDir.getAbsolutePath());
+            }
+        });
 
-        final DebExtension extension = project.getExtensions().findByType(DebExtension.class);
-        if (extension != null) {
-            extension.getAdditionalVariables().get().forEach((key, value) -> variables.put(key, stringize(value)));
-        }
         getAdditionalVariables().get().forEach((key, value) -> variables.put(key, stringize(value)));
 
         return variables;
@@ -559,11 +598,6 @@ public abstract class DebTask extends DefaultTask {
         tags.add("debian-changelog-file-missing");
         tags.add("debian-revision-should-not-be-zero");
         tags.add("no-copyright-file");
-
-        final DebExtension extension = getProject().getExtensions().findByType(DebExtension.class);
-        if (extension != null) {
-            tags.addAll(extension.getLintianTags().get());
-        }
         tags.addAll(getLintianTags().get());
 
         return tags;

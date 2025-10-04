@@ -3,6 +3,9 @@
         <Bug pattern="BAS_BLOATED_ASSIGNMENT_SCOPE"/>
     </Match>
     <Match>
+        <Bug pattern="CE_CLASS_ENVY"/>
+    </Match>
+    <Match>
         <Bug pattern="CT_CONSTRUCTOR_THROW"/>
         <Class name="~.*DebTask"/>
     </Match>

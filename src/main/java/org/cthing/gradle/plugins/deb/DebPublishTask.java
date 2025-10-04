@@ -28,7 +28,9 @@ import org.apache.hc.core5.http.io.entity.PathEntity;
 import org.apache.hc.core5.util.Timeout;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskExecutionException;
@@ -77,6 +79,14 @@ public abstract class DebPublishTask extends DefaultTask {
     public abstract Property<@NonNull String> getRepositoryPassword();
 
     /**
+     * Obtains the Debian tasks whose packages need to be published.
+     *
+     * @return Debian tasks to publish
+     */
+    @Internal
+    public abstract SetProperty<@NonNull DebTask> getDebTasks();
+
+    /**
      * Performs the publishing of the DEB packages to the APT repository.
      */
     @TaskAction
@@ -90,8 +100,7 @@ public abstract class DebPublishTask extends DefaultTask {
                 final Consumer<File> publishProc = "file".equals(repoUri.getScheme())
                                                    ? artifact -> publishLocal(artifact.toPath(), repoUri)
                                                    : artifact -> publishRemote(artifact.toPath(), repoUri);
-
-                getProject().getTasks().withType(DebTask.class, debTask -> debTask.getArtifacts().forEach(publishProc));
+                getDebTasks().get().forEach(debTask -> debTask.getArtifacts().forEach(publishProc));
             } catch (final URISyntaxException ex) {
                 throw new TaskExecutionException(this, ex);
             }
