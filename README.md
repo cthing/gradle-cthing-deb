@@ -14,7 +14,7 @@ applied to a Gradle project using the `plugins` block:
 
 ```kotlin
 plugins {
-  id("org.cthing.cthing-deb") version "1.0.0"
+  id("org.cthing.cthing-deb") version "2.0.0"
 }
 ```
 
@@ -36,7 +36,7 @@ In addition, to obtain meaningful version information, the project version must 
 of [org.cthing.projectversion.ProjectVersion](https://github.com/cthing/cthing-projectversion). For
 example:
 ```kotlin
-version = ProjectVersion("1.0.0", BuildType.snapshot)
+version = ProjectVersion("2.0.0", BuildType.snapshot)
 ```
 
 ### Creating a Package
@@ -101,7 +101,7 @@ The following Gradle and Java versions are supported:
 
 | Plugin Version | Gradle Version | Minimum Java Version |
 |----------------|----------------|----------------------|
-| 1.0.0+         | 8.2+           | 17                   |
+| 2.0.0+         | 8.2+, 9.0+     | 17                   |
 
 ## Building
 
