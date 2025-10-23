@@ -17,7 +17,7 @@ versions = { id = "com.github.ben-manes.versions", version = "0.53.0" }
 assertJ = "org.assertj:assertj-core:3.27.6"
 assertJGradle = "org.cthing:assertj-gradle:3.0.0"
 commonsIO = "commons-io:commons-io:2.20.0"
-cthingProjectVersion = "org.cthing:cthing-projectversion:2.0.0"
+cthingProjectVersion = "org.cthing:cthing-projectversion:3.0.0"
 cthingPublishingPlugin = "org.cthing:gradle-cthing-publishing:2.0.0"
 freemarker = "org.freemarker:freemarker:2.3.34"
 httpClient = "org.apache.httpcomponents.client5:httpclient5:5.5"
