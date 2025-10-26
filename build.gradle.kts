@@ -22,6 +22,7 @@ plugins {
     checkstyle
     jacoco
     signing
+    alias(libs.plugins.buildGreeting)
     alias(libs.plugins.cthingPublishing)
     alias(libs.plugins.cthingVersioning)
     alias(libs.plugins.dependencyAnalysis)
